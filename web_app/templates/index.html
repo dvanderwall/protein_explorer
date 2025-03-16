@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protein Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background-color: #f8f9fa;
+            padding: 4rem 0;
+            margin-bottom: 2rem;
+        }
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #0d6efd;
+        }
+        .footer {
+            margin-top: 4rem;
+            padding: 2rem 0;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">Protein Explorer</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/search">Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analyze">Analyze</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-4">Explore Protein Structures and Interactions</h1>
+            <p class="lead">
+                A powerful tool for visualizing AlphaFold protein structures and analyzing protein-protein interaction networks.
+            </p>
+            <div class="mt-4">
+                <a href="/search" class="btn btn-primary btn-lg me-2">Search Proteins</a>
+                <a href="/analyze" class="btn btn-secondary btn-lg">Analyze Multiple Proteins</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="container my-5">
+        <h2 class="text-center mb-5">Features</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Data Scaffolding</h3>
+                    <p>Retrieve protein structures from AlphaFold Database and interaction data from STRING.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Network Navigation</h3>
+                    <p>Explore protein-protein interaction networks and find paths between proteins.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <div class="feature-icon">📊</div>
+                    <h3>Data Analysis</h3>
+                    <p>Analyze protein structures using PCA and identify key proteins in networks.</p>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <div class="feature-icon">🧩</div>
+                    <h3>Compare Structures</h3>
+                    <p>Compare multiple protein structures to identify structural similarities.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Interactive Visualization</h3>
+                    <p>Visualize protein structures in 3D and explore interaction networks.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>API Access</h3>
+                    <p>Access protein data and analysis through a simple API.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Example Search -->
+    <section class="container my-5 py-4 bg-light rounded">
+        <h2 class="text-center mb-4">Quick Search</h2>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form action="/search" method="post">
+                    <div class="input-group mb-3">
+                        <select class="form-select" name="id_type" style="max-width: 150px;">
+                            <option value="uniprot">UniProt ID</option>
+                            <option value="gene">Gene Symbol</option>
+                        </select>
+                        <input type="text" class="form-control" name="identifier" placeholder="Enter UniProt ID or Gene Symbol (e.g., P53_HUMAN or TP53)">
+                        <button class="btn btn-primary" type="submit">Search</button>
+                    </div>
+                    <div class="text-center">
+                        <small class="text-muted">Examples: P53_HUMAN, TP53, P42680, SYK, Q9Y243, PAK7</small>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Example Usage -->
+    <section class="container my-5">
+        <h2 class="text-center mb-4">Example Usage</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Visualize AlphaFold Structure</h5>
+                        <p class="card-text">Explore the 3D structure of proteins predicted by AlphaFold.</p>
+                        <a href="/protein/P53_HUMAN?id_type=uniprot" class="btn btn-primary">View TP53 Structure</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Explore Protein Networks</h5>
+                        <p class="card-text">Visualize protein-protein interaction networks and discover relationships.</p>
+                        <a href="/network/P53_HUMAN" class="btn btn-primary">View TP53 Network</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Analyze Multiple Proteins</h5>
+                        <p class="card-text">Compare multiple proteins and find common interactors.</p>
+                        <a href="/analyze" class="btn btn-primary">Start Analysis</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">API Access</h5>
+                        <p class="card-text">Access protein data programmatically through our simple API.</p>
+                        <a href="/api/protein/P53_HUMAN" class="btn btn-primary">View API Example</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Protein Explorer</h5>
+                    <p>A tool for exploring protein structures and interactions.</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/search">Search</a></li>
+                        <li><a href="/analyze">Analyze</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>External Resources</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="https://alphafold.ebi.ac.uk/" target="_blank">AlphaFold DB</a></li>
+                        <li><a href="https://www.uniprot.org/" target="_blank">UniProt</a></li>
+                        <li><a href="https://string-db.org/" target="_blank">STRING</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <p class="text-center">&copy; 2025 Protein Explorer</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

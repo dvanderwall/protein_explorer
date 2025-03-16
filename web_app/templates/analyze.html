@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyze Proteins - Protein Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">Protein Explorer</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/search">Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/analyze">Analyze</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Analysis Form -->
+    <section class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="text-center mb-4">Analyze Multiple Proteins</h1>
+                
+                {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+                
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post">
+                            <div class="mb-3">
+                                <label for="proteins" class="form-label">Protein List:</label>
+                                <textarea class="form-control" id="proteins" name="proteins" rows="4" 
+                                          placeholder="Enter comma-separated UniProt IDs or gene symbols (e.g., P53_HUMAN, TP53, P42680)" required></textarea>
+                                <div class="form-text">
+                                    Enter up to 10 protein identifiers separated by commas.
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Analysis Type:</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="analysis_type" 
+                                           id="network_analysis" value="network" checked>
+                                    <label class="form-check-label" for="network_analysis">
+                                        Network Analysis - Find interactions and common interactors
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="analysis_type" 
+                                           id="structure_analysis" value="structure">
+                                    <label class="form-check-label" for="structure_analysis">
+                                        Structure Analysis - Compare 3D structures
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Analyze</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Example Analyses -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Example Analyses</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>1. Analyze Related Tumor Suppressor Proteins:</h6>
+                        <p>
+                            <button class="btn btn-sm btn-outline-primary example-btn" 
+                                  data-proteins="P53_HUMAN, P04637, P38398" data-type="network">
+                                TP53, P53, BRCA1 Network
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary example-btn" 
+                                  data-proteins="P53_HUMAN, P04637, P38398" data-type="structure">
+                                TP53, P53, BRCA1 Structure
+                            </button>
+                        </p>
+                        
+                        <h6>2. Analyze Kinase Proteins:</h6>
+                        <p>
+                            <button class="btn btn-sm btn-outline-primary example-btn" 
+                                  data-proteins="P42680, P06239, Q9Y243" data-type="network">
+                                SYK, LCK, PAK7 Network
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary example-btn" 
+                                  data-proteins="P42680, P06239, Q9Y243" data-type="structure">
+                                SYK, LCK, PAK7 Structure
+                            </button>
+                        </p>
+                        
+                        <h6>3. Analyze DNA Repair Proteins:</h6>
+                        <p>
+                            <button class="btn btn-sm btn-outline-primary example-btn" 
+                                  data-proteins="P38398, O60934, P49959" data-type="network">
+                                BRCA1, NBN, MRE11 Network
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-5">
+        <div class="container">
+            <p class="text-center mb-0">&copy; 2025 Protein Explorer</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Example button handler
+        document.querySelectorAll('.example-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const proteins = this.getAttribute('data-proteins');
+                const analysisType = this.getAttribute('data-type');
+                
+                document.getElementById('proteins').value = proteins;
+                
+                if (analysisType === 'network') {
+                    document.getElementById('network_analysis').checked = true;
+                } else {
+                    document.getElementById('structure_analysis').checked = true;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

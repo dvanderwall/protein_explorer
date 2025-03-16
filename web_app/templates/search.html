@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Proteins - Protein Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">Protein Explorer</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/search">Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analyze">Analyze</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Search Section -->
+    <section class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="text-center mb-4">Search Proteins</h1>
+                
+                {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+                
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post">
+                            <div class="mb-3">
+                                <label for="id_type" class="form-label">Search by:</label>
+                                <select class="form-select" id="id_type" name="id_type">
+                                    <option value="uniprot">UniProt ID</option>
+                                    <option value="gene">Gene Symbol</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="identifier" class="form-label">Identifier:</label>
+                                <input type="text" class="form-control" id="identifier" name="identifier" 
+                                       placeholder="Enter UniProt ID or gene symbol" required>
+                                <div class="form-text">
+                                    Examples: 
+                                    <span class="badge bg-secondary uniprot-example">P53_HUMAN</span>
+                                    <span class="badge bg-secondary gene-example">TP53</span>
+                                    <span class="badge bg-secondary uniprot-example">P04637</span>
+                                    <span class="badge bg-secondary gene-example">BRCA1</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Search</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Popular Proteins -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Popular Proteins</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Tumor Proteins:</h6>
+                                <ul class="list-group">
+                                    <li class="list-group-item">
+                                        <a href="/protein/P53_HUMAN?id_type=uniprot">TP53 (P53_HUMAN)</a>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <a href="/protein/P04637?id_type=uniprot">TP53 (P04637)</a>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <a href="/protein/P38398?id_type=uniprot">BRCA1 (P38398)</a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Kinases:</h6>
+                                <ul class="list-group">
+                                    <li class="list-group-item">
+                                        <a href="/protein/P42680?id_type=uniprot">SYK (P42680)</a>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <a href="/protein/P06239?id_type=uniprot">LCK (P06239)</a>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <a href="/protein/Q9Y243?id_type=uniprot">PAK7 (Q9Y243)</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-5">
+        <div class="container">
+            <p class="text-center mb-0">&copy; 2025 Protein Explorer</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle examples based on selected ID type
+        document.getElementById('id_type').addEventListener('change', function() {
+            const idType = this.value;
+            const uniprotExamples = document.querySelectorAll('.uniprot-example');
+            const geneExamples = document.querySelectorAll('.gene-example');
+            
+            if (idType === 'uniprot') {
+                uniprotExamples.forEach(el => el.style.display = 'inline');
+                geneExamples.forEach(el => el.style.display = 'none');
+            } else {
+                uniprotExamples.forEach(el => el.style.display = 'none');
+                geneExamples.forEach(el => el.style.display = 'inline');
+            }
+        });
+    </script>
+</body>
+</html>
