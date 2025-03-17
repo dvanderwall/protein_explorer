@@ -18,9 +18,72 @@ UNIPROT_API = "https://rest.uniprot.org/uniprotkb"
 ALPHAFOLD_API = "https://alphafold.ebi.ac.uk/api"
 STRING_API = "https://string-db.org/api"
 
-# Cache directory
-CACHE_DIR = os.path.expanduser("~/.protein_explorer/cache")
-os.makedirs(CACHE_DIR, exist_ok=True)
+# Cache directory - now with a function to ensure it exists
+def get_cache_dir():
+    """
+    Get the cache directory path and ensure it exists.
+    
+    Returns:
+        Path to the cache directory
+    """
+    cache_dir = os.path.expanduser("~/.protein_explorer/cache")
+    
+    # Create directory if it doesn't exist
+    if not os.path.exists(cache_dir):
+        try:
+            print(f"Creating cache directory: {cache_dir}")
+            os.makedirs(cache_dir, exist_ok=True)
+        except Exception as e:
+            # If we can't create the directory, use a temporary directory
+            import tempfile
+            cache_dir = os.path.join(tempfile.gettempdir(), "protein_explorer_cache")
+            print(f"Failed to create cache at {cache_dir}, using temporary directory instead: {cache_dir}")
+            os.makedirs(cache_dir, exist_ok=True)
+    
+    return cache_dir
+
+def save_to_cache(filename, data):
+    """
+    Save data to the cache file.
+    
+    Args:
+        filename: Name of the cache file
+        data: Data to save (must be JSON serializable)
+    """
+    cache_dir = get_cache_dir()
+    cache_file = os.path.join(cache_dir, filename)
+    
+    try:
+        with open(cache_file, 'w') as f:
+            json.dump(data, f)
+        return True
+    except Exception as e:
+        logger.error(f"Error saving to cache: {e}")
+        return False
+
+
+def load_from_cache(filename):
+    """
+    Load data from the cache file.
+    
+    Args:
+        filename: Name of the cache file
+        
+    Returns:
+        Loaded data or None if file doesn't exist or error occurs
+    """
+    cache_dir = get_cache_dir()
+    cache_file = os.path.join(cache_dir, filename)
+    
+    if not os.path.exists(cache_file):
+        return None
+        
+    try:
+        with open(cache_file, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"Error loading from cache: {e}")
+        return None
 
 def get_uniprot_id_from_gene(gene_symbol: str, organism: str = "human") -> Optional[str]:
     """
@@ -35,12 +98,12 @@ def get_uniprot_id_from_gene(gene_symbol: str, organism: str = "human") -> Optio
     """
     # Cache key
     cache_key = f"{gene_symbol}_{organism}"
-    cache_file = os.path.join(CACHE_DIR, f"gene_{cache_key}.json")
+    cache_filename = f"gene_{cache_key}.json"
     
     # Check cache
-    if os.path.exists(cache_file):
-        with open(cache_file, 'r') as f:
-            return json.load(f).get('uniprot_id')
+    cache_data = load_from_cache(cache_filename)
+    if cache_data:
+        return cache_data.get('uniprot_id')
     
     # Prepare search query
     if organism.lower() == "human":
@@ -59,8 +122,7 @@ def get_uniprot_id_from_gene(gene_symbol: str, organism: str = "human") -> Optio
             uniprot_id = data['results'][0]['primaryAccession']
             
             # Cache the result
-            with open(cache_file, 'w') as f:
-                json.dump({'uniprot_id': uniprot_id}, f)
+            save_to_cache(cache_filename, {'uniprot_id': uniprot_id})
                 
             return uniprot_id
         else:
@@ -94,14 +156,12 @@ def get_protein_by_id(uniprot_id: Optional[str] = None,
         if not uniprot_id:
             raise ValueError(f"Could not find UniProt ID for gene {gene_symbol}")
     
-    # Cache key and file
-    cache_file = os.path.join(CACHE_DIR, f"uniprot_{uniprot_id}.json")
+    # Cache filename
+    cache_filename = f"uniprot_{uniprot_id}.json"
     
     # Check cache
-    if os.path.exists(cache_file):
-        with open(cache_file, 'r') as f:
-            metadata = json.load(f)
-    else:
+    metadata = load_from_cache(cache_filename)
+    if not metadata:
         # Get protein metadata from UniProt
         url = f"{UNIPROT_API}/{uniprot_id}.json"
         try:
@@ -110,8 +170,7 @@ def get_protein_by_id(uniprot_id: Optional[str] = None,
             metadata = response.json()
             
             # Cache the result
-            with open(cache_file, 'w') as f:
-                json.dump(metadata, f)
+            save_to_cache(cache_filename, metadata)
                 
         except requests.exceptions.RequestException as e:
             logger.error(f"Error retrieving UniProt data: {e}")
@@ -144,6 +203,7 @@ def get_protein_by_id(uniprot_id: Optional[str] = None,
 def check_alphafold_exists(uniprot_id: str, force_check: bool = False) -> bool:
     """
     Check if AlphaFold structure exists for a given UniProt ID.
+    Tries multiple versions and formats to be more robust.
     
     Args:
         uniprot_id: UniProt ID
@@ -154,40 +214,53 @@ def check_alphafold_exists(uniprot_id: str, force_check: bool = False) -> bool:
     """
     print(f"DEBUG: Checking if AlphaFold structure exists for {uniprot_id}")
     
-    cache_file = os.path.join(CACHE_DIR, f"af_exists_{uniprot_id}.json")
-    print(f"DEBUG: Cache file path: {cache_file}")
+    # Ensure cache directory exists and get cache file path
+    cache_filename = f"af_exists_{uniprot_id}.json"
+    cache_data = None if force_check else load_from_cache(cache_filename)
     
     # Check cache (unless force_check is True)
-    if not force_check and os.path.exists(cache_file):
-        print(f"DEBUG: Cache file exists, reading from cache")
-        with open(cache_file, 'r') as f:
-            result = json.load(f).get('exists', False)
-            print(f"DEBUG: Cache indicates exists={result}")
+    if cache_data is not None:
+        result = cache_data.get('exists', False)
+        print(f"DEBUG: Cache indicates exists={result}")
+        
+        # If cache has a URL, return that information
+        if 'url' in cache_data and cache_data['url']:
             return result
     
     print(f"DEBUG: Checking directly (bypass cache: {force_check})")
-    # Use direct URL for checking - try v4 first
-    url = f"https://alphafold.ebi.ac.uk/files/AF-{uniprot_id}-F1-model_v4.pdb"
-    print(f"DEBUG: Checking URL: {url}")
     
-    try:
-        response = requests.head(url, timeout=5)
-        print(f"DEBUG: Response status code: {response.status_code}")
-        exists = response.status_code == 200
-        
-        # Cache the result
-        print(f"DEBUG: Caching result: exists={exists}")
-        with open(cache_file, 'w') as f:
-            json.dump({'exists': exists, 'url': url if exists else None}, f)
+    # List of possible URL patterns to try
+    urls_to_try = [
+        f"https://alphafold.ebi.ac.uk/files/AF-{uniprot_id}-F1-model_v4.pdb",
+        f"https://alphafold.ebi.ac.uk/files/AF-{uniprot_id}-F1-model_v3.pdb",
+        f"https://alphafold.ebi.ac.uk/files/AF-{uniprot_id}-F1-model_v2.pdb",
+        f"https://alphafold.ebi.ac.uk/files/AF-{uniprot_id}-F1-model_v1.pdb"
+    ]
+    
+    # Try each URL pattern
+    for url in urls_to_try:
+        print(f"DEBUG: Checking URL: {url}")
+        try:
+            response = requests.head(url, timeout=5)
+            print(f"DEBUG: Response status code: {response.status_code}")
             
-        return exists
-    except requests.exceptions.RequestException as e:
-        print(f"DEBUG: Request exception: {e}")
-        return False
+            if response.status_code == 200:
+                # Cache the result
+                print(f"DEBUG: Caching result: exists=True, url={url}")
+                save_to_cache(cache_filename, {'exists': True, 'url': url})
+                return True
+        except requests.exceptions.RequestException as e:
+            print(f"DEBUG: Request exception for {url}: {e}")
+    
+    # If none of the URLs worked, cache the negative result
+    print(f"DEBUG: Caching result: exists=False")
+    save_to_cache(cache_filename, {'exists': False, 'url': None})
+    return False
 
 def get_alphafold_structure(uniprot_id: str) -> Optional[str]:
     """
     Download the AlphaFold structure for a given UniProt ID.
+    Tries multiple versions and formats for robustness.
     
     Args:
         uniprot_id: UniProt ID
@@ -197,39 +270,81 @@ def get_alphafold_structure(uniprot_id: str) -> Optional[str]:
     """
     print(f"DEBUG: Getting AlphaFold structure for {uniprot_id}")
     
-    cache_file = os.path.join(CACHE_DIR, f"alphafold_{uniprot_id}.pdb")
-    print(f"DEBUG: Structure cache file path: {cache_file}")
+    # Ensure cache directory exists and get cache file path
+    cache_filename = f"alphafold_{uniprot_id}.pdb"
+    cache_dir = get_cache_dir()
+    cache_file = os.path.join(cache_dir, cache_filename)
     
     # Check cache
     if os.path.exists(cache_file):
         print(f"DEBUG: Structure cache file exists, reading from cache")
-        with open(cache_file, 'r') as f:
-            structure = f.read()
-            print(f"DEBUG: Read {len(structure)} characters from cache")
-            return structure
+        try:
+            with open(cache_file, 'r') as f:
+                structure = f.read()
+                print(f"DEBUG: Read {len(structure)} characters from cache")
+                return structure
+        except Exception as e:
+            print(f"DEBUG: Error reading from cache: {e}")
+            # Continue to download if cache read fails
     
     print(f"DEBUG: No structure cache, downloading")
+    
+    # Check if structure exists and get the URL
+    cache_info_filename = f"af_exists_{uniprot_id}.json"
+    cache_data = load_from_cache(cache_info_filename)
+    
+    if cache_data:
+        if cache_data.get('exists') and cache_data.get('url'):
+            url = cache_data['url']
+            print(f"DEBUG: Using cached URL: {url}")
+        else:
+            # Structure doesn't exist according to cache
+            print(f"DEBUG: Structure does not exist according to cache")
+            return None
+    else:
+        # No cache info, need to check if structure exists
+        if not check_alphafold_exists(uniprot_id):
+            print(f"DEBUG: Structure not found for {uniprot_id}")
+            return None
+        
+        # Read the updated cache to get the URL
+        cache_data = load_from_cache(cache_info_filename)
+        url = cache_data.get('url') if cache_data else None
+            
+        if not url:
+            # Still no URL, use default v4 as a last resort
+            url = f"https://alphafold.ebi.ac.uk/files/AF-{uniprot_id}-F1-model_v4.pdb"
+    
     # Download from AlphaFold
-    url = f"https://alphafold.ebi.ac.uk/files/AF-{uniprot_id}-F1-model_v4.pdb"
     print(f"DEBUG: Downloading from URL: {url}")
     
     try:
         response = requests.get(url)
         print(f"DEBUG: Response status code: {response.status_code}")
-        response.raise_for_status()
+        
+        if response.status_code != 200:
+            print(f"DEBUG: Failed to download structure, status code: {response.status_code}")
+            return None
+            
         structure = response.text
         print(f"DEBUG: Downloaded {len(structure)} characters")
         
         # Cache the result
         print(f"DEBUG: Caching downloaded structure")
-        with open(cache_file, 'w') as f:
-            f.write(structure)
+        try:
+            with open(cache_file, 'w') as f:
+                f.write(structure)
+        except Exception as e:
+            print(f"DEBUG: Error caching structure: {e}")
+            # Continue even if caching fails
             
         return structure
     except requests.exceptions.RequestException as e:
         print(f"DEBUG: Request exception: {e}")
         logger.error(f"Error downloading AlphaFold structure: {e}")
         return None
+    
+
 
 def get_protein_interactions(uniprot_id: str, 
                            confidence_score: float = 0.7, 
@@ -247,12 +362,12 @@ def get_protein_interactions(uniprot_id: str,
     Returns:
         Dictionary of interacting proteins and confidence scores
     """
-    cache_file = os.path.join(CACHE_DIR, f"string_{uniprot_id}_{confidence_score}.json")
+    cache_filename = f"string_{uniprot_id}_{confidence_score}.json"
     
     # Check cache
-    if os.path.exists(cache_file):
-        with open(cache_file, 'r') as f:
-            return json.load(f)
+    interactions = load_from_cache(cache_filename)
+    if interactions:
+        return interactions
     
     # Prepare API request
     url = f"{STRING_API}/json/network"
@@ -281,45 +396,9 @@ def get_protein_interactions(uniprot_id: str,
             interactions[target] = score
             
         # Cache the result
-        with open(cache_file, 'w') as f:
-            json.dump(interactions, f)
+        save_to_cache(cache_filename, interactions)
             
         return interactions
     except requests.exceptions.RequestException as e:
         logger.error(f"Error retrieving protein interactions: {e}")
         return {}
-
-def batch_retrieve_proteins(id_list: List[str], 
-                          id_type: str = "uniprot",
-                          organism: str = "human") -> Dict[str, Dict]:
-    """
-    Batch retrieve protein data for a list of IDs.
-    
-    Args:
-        id_list: List of UniProt IDs or gene symbols
-        id_type: Type of IDs provided ("uniprot" or "gene")
-        organism: Organism name (default: "human")
-        
-    Returns:
-        Dictionary of protein data keyed by ID
-    """
-    results = {}
-    
-    for identifier in id_list:
-        try:
-            if id_type.lower() == "uniprot":
-                protein_data = get_protein_by_id(uniprot_id=identifier, organism=organism)
-            else:
-                protein_data = get_protein_by_id(gene_symbol=identifier, organism=organism)
-                
-            # Use the original ID as key
-            results[identifier] = protein_data
-            
-            # Add a short delay to avoid overwhelming the API
-            time.sleep(0.5)
-            
-        except Exception as e:
-            logger.error(f"Error retrieving data for {identifier}: {e}")
-            results[identifier] = {"error": str(e)}
-            
-    return results

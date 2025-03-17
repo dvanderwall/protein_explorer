@@ -4,9 +4,7 @@ Data scaffolding and processing modules for protein data.
 
 from protein_explorer.data.scaffold import (
     get_protein_by_id,
-    get_alphafold_structure,
-    get_protein_interactions,
-    batch_retrieve_proteins
+    get_alphafold_structure
 )
 
 from protein_explorer.data.processor import (
