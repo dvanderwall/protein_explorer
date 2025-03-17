@@ -18,11 +18,37 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import protein_explorer as pe
 
 
+"""
+Add this code near the top of app.py, just after the imports and before the Flask app initialization
+"""
+
 # Ensure cache directory exists
-cache_dir = os.path.expanduser("~/.protein_explorer/cache")
-if not os.path.exists(cache_dir):
-    print(f"Creating cache directory: {cache_dir}")
-    os.makedirs(cache_dir, exist_ok=True)
+def ensure_cache_directory():
+    """Ensure the cache directory exists at application startup."""
+    # Paths for cache
+    cache_dir = os.path.expanduser("~/.protein_explorer/cache")
+    
+    # Create cache directory if it doesn't exist
+    if not os.path.exists(cache_dir):
+        try:
+            print(f"Creating cache directory: {cache_dir}")
+            os.makedirs(cache_dir, exist_ok=True)
+            print(f"Cache directory created successfully: {cache_dir}")
+        except Exception as e:
+            # If we can't create in home directory, use a temporary directory
+            import tempfile
+            alt_cache_dir = os.path.join(tempfile.gettempdir(), "protein_explorer_cache")
+            print(f"Failed to create cache in home directory: {e}")
+            print(f"Using alternative cache directory: {alt_cache_dir}")
+            
+            try:
+                os.makedirs(alt_cache_dir, exist_ok=True)
+            except Exception as e3:
+                print(f"Failed to create alternative cache directory: {e3}")
+                print("Application may have issues with caching")
+
+# Run cache directory initialization
+ensure_cache_directory()
 
 
 # Configure logging
@@ -420,6 +446,50 @@ def api_phosphosites(uniprot_id):
         return jsonify(phosphosites)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+    
+@app.route('/phosphosite', methods=['GET', 'POST'])
+def phosphosite_analysis():
+    """Phosphosite structural analysis page with improved error handling."""
+    import os
+    from flask import request, render_template
+    
+    # Import our phospho_analyzer module
+    from protein_explorer.analysis.phospho_analyzer import analyze_protein
+    
+    # Initialize variables
+    results = None
+    error = None
+    
+    if request.method == 'POST':
+        # Get identifier from form
+        identifier = request.form.get('identifier', '')
+        id_type = request.form.get('id_type', 'uniprot')
+        
+        if not identifier:
+            return render_template('phosphosite.html', error="Please enter an identifier")
+        
+        try:
+            # Get the parquet file path
+            parquet_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+                                     'Combined_Kinome_10A_Master_Filtered_2.parquet')
+            
+            # Run the full analysis
+            results = analyze_protein(identifier, id_type, parquet_file)
+            
+            # Return results - now including potential error message
+            return render_template('phosphosite.html', 
+                                  protein_info=results['protein_info'],
+                                  phosphosites=results['phosphosites'],
+                                  structural_matches=results['structural_matches'],
+                                  error=results.get('error'))
+                
+        except Exception as e:
+            print(f"Error in phosphosite analysis: {e}")
+            error = str(e)
+            return render_template('phosphosite.html', error=error)
+    
+    # GET request - show empty form
+    return render_template('phosphosite.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

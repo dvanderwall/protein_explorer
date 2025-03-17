@@ -5,34 +5,281 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Protein Explorer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <style>
+        :root {
+            --primary-color: #3050b0;
+            --secondary-color: #009688;
+            --accent-color: #ff6d00;
+            --light-bg: #f8f9fa;
+            --dark-bg: #14274e;
+            --text-color: #333;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 12px 0;
+            background-color: white;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+        
+        .navbar-nav .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: var(--primary-color);
+        }
+        
         .hero-section {
-            background-color: #f8f9fa;
-            padding: 4rem 0;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #6f86d6 100%);
+            padding: 6rem 0;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://cdn.jsdelivr.net/gh/plotly/dash-sample-apps@master/apps/dash-protein-explorer/assets/protein_bg.jpg');
+            background-size: cover;
+            opacity: 0.15;
+            z-index: 0;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .display-3 {
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .lead {
+            font-size: 1.25rem;
             margin-bottom: 2rem;
         }
-        .feature-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            color: #0d6efd;
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            border-radius: 30px;
+            transition: all 0.3s;
         }
+        
+        .btn-primary:hover {
+            background-color: #1e40af;
+            border-color: #1e40af;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-outline-light {
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            border-radius: 30px;
+            transition: all 0.3s;
+        }
+        
+        .btn-outline-light:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .features-section {
+            padding: 5rem 0;
+            background-color: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 4rem;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: "";
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background-color: var(--primary-color);
+            border-radius: 2px;
+        }
+        
+        .feature-card {
+            padding: 2rem;
+            border-radius: 12px;
+            background-color: white;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+            height: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            height: 70px;
+            background-color: rgba(48, 80, 176, 0.1);
+            border-radius: 50%;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            font-size: 1.75rem;
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+        
+        .feature-text {
+            color: #718096;
+            line-height: 1.7;
+        }
+        
+        .example-section {
+            padding: 5rem 0;
+            background-color: var(--light-bg);
+        }
+        
+        .example-card {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+            height: 100%;
+        }
+        
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+        
+        .example-card .card-img-top {
+            height: 180px;
+            object-fit: cover;
+        }
+        
+        .example-card .card-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .quick-search {
+            padding: 4rem 0;
+            background-color: white;
+        }
+        
+        .search-card {
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            background-color: white;
+        }
+        
+        .form-control {
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            font-size: 1rem;
+        }
+        
+        .form-select {
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            font-size: 1rem;
+        }
+        
         .footer {
-            margin-top: 4rem;
-            padding: 2rem 0;
-            background-color: #f8f9fa;
+            background-color: var(--dark-bg);
+            color: white;
+            padding: 4rem 0 2rem;
+        }
+        
+        .footer h5 {
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        
+        .footer a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .footer a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.5rem;
+            margin-top: 3rem;
+        }
+        
+        .protein-animation {
+            position: absolute;
+            right: -100px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 600px;
+            height: 600px;
+            opacity: 0.4;
+        }
+        
+        @media (max-width: 992px) {
+            .protein-animation {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container">
-            <a class="navbar-brand" href="/">Protein Explorer</a>
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-box me-2"></i>Protein Explorer
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link active" href="/">Home</a>
                     </li>
@@ -42,6 +289,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/analyze">Analyze</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/phosphosite">Phosphosite Analysis</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -49,130 +299,173 @@
 
     <!-- Hero Section -->
     <section class="hero-section">
-        <div class="container text-center">
-            <h1 class="display-4">Explore Protein Structures and Interactions</h1>
-            <p class="lead">
-                A powerful tool for visualizing AlphaFold protein structures and analyzing protein-protein interaction networks.
-            </p>
-            <div class="mt-4">
-                <a href="/search" class="btn btn-primary btn-lg me-2">Search Proteins</a>
-                <a href="/analyze" class="btn btn-secondary btn-lg">Analyze Multiple Proteins</a>
+        <div class="container hero-content">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h1 class="display-3">Explore Protein Structures and Interactions</h1>
+                    <p class="lead">A comprehensive platform for visualizing AlphaFold protein structures, analyzing protein-protein interaction networks, and exploring phosphorylation sites.</p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="/search" class="btn btn-primary btn-lg">
+                            <i class="bi bi-search me-2"></i>Search Proteins
+                        </a>
+                        <a href="/analyze" class="btn btn-outline-light btn-lg">
+                            <i class="bi bi-graph-up me-2"></i>Analyze Multiple Proteins
+                        </a>
+                    </div>
+                </div>
             </div>
+        </div>
+        <div class="protein-animation">
+            <!-- This could be replaced with an actual protein animation or illustration -->
         </div>
     </section>
 
     <!-- Features -->
-    <section class="container my-5">
-        <h2 class="text-center mb-5">Features</h2>
-        <div class="row">
-            <div class="col-md-4 mb-4">
-                <div class="text-center">
-                    <div class="feature-icon">🔍</div>
-                    <h3>Data Scaffolding</h3>
-                    <p>Retrieve protein structures from AlphaFold Database and interaction data from STRING.</p>
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title display-5">Key Features</h2>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-database"></i>
+                        </div>
+                        <h3 class="feature-title">Data Scaffolding</h3>
+                        <p class="feature-text">Retrieve protein structures from AlphaFold Database and interaction data from STRING with seamless integration.</p>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="text-center">
-                    <div class="feature-icon">🔄</div>
-                    <h3>Network Navigation</h3>
-                    <p>Explore protein-protein interaction networks and find paths between proteins.</p>
+                
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-diagram-3"></i>
+                        </div>
+                        <h3 class="feature-title">Network Navigation</h3>
+                        <p class="feature-text">Explore protein-protein interaction networks and find paths between proteins using advanced graph algorithms.</p>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="text-center">
-                    <div class="feature-icon">📊</div>
-                    <h3>Data Analysis</h3>
-                    <p>Analyze protein structures using PCA and identify key proteins in networks.</p>
+                
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-bar-chart"></i>
+                        </div>
+                        <h3 class="feature-title">Data Analysis</h3>
+                        <p class="feature-text">Analyze protein structures using PCA and identify key proteins in networks with centrality metrics.</p>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="row mt-4">
-            <div class="col-md-4 mb-4">
-                <div class="text-center">
-                    <div class="feature-icon">🧩</div>
-                    <h3>Compare Structures</h3>
-                    <p>Compare multiple protein structures to identify structural similarities.</p>
+                
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </div>
+                        <h3 class="feature-title">Structure Comparison</h3>
+                        <p class="feature-text">Compare multiple protein structures to identify structural similarities and evolutionary relationships.</p>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="text-center">
-                    <div class="feature-icon">🌐</div>
-                    <h3>Interactive Visualization</h3>
-                    <p>Visualize protein structures in 3D and explore interaction networks.</p>
+                
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-eye"></i>
+                        </div>
+                        <h3 class="feature-title">3D Visualization</h3>
+                        <p class="feature-text">Visualize protein structures in 3D with interactive controls and explore interaction networks graphically.</p>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="text-center">
-                    <div class="feature-icon">⚙️</div>
-                    <h3>API Access</h3>
-                    <p>Access protein data and analysis through a simple API.</p>
+                
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-signpost-split"></i>
+                        </div>
+                        <h3 class="feature-title">Phosphosite Analysis</h3>
+                        <p class="feature-text">Identify and analyze potential phosphorylation sites in proteins with structural similarity comparisons.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Example Search -->
-    <section class="container my-5 py-4 bg-light rounded">
-        <h2 class="text-center mb-4">Quick Search</h2>
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <form action="/search" method="post">
-                    <div class="input-group mb-3">
-                        <select class="form-select" name="id_type" style="max-width: 150px;">
-                            <option value="uniprot">UniProt ID</option>
-                            <option value="gene">Gene Symbol</option>
-                        </select>
-                        <input type="text" class="form-control" name="identifier" placeholder="Enter UniProt ID or Gene Symbol (e.g., P53_HUMAN or TP53)">
-                        <button class="btn btn-primary" type="submit">Search</button>
+    <!-- Quick Search -->
+    <section class="quick-search">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="search-card">
+                        <h3 class="mb-4 text-center">Quick Protein Search</h3>
+                        <form action="/search" method="post">
+                            <div class="input-group mb-3">
+                                <select class="form-select" name="id_type" style="max-width: 170px; border-radius: 30px 0 0 30px;">
+                                    <option value="uniprot">UniProt ID</option>
+                                    <option value="gene">Gene Symbol</option>
+                                </select>
+                                <input type="text" class="form-control" name="identifier" placeholder="Enter UniProt ID or Gene Symbol (e.g., P53_HUMAN or TP53)">
+                                <button class="btn btn-primary" type="submit" style="border-radius: 0 30px 30px 0;">
+                                    <i class="bi bi-search me-1"></i> Search
+                                </button>
+                            </div>
+                            <div class="text-center mt-3">
+                                <p class="mb-1">Popular examples:</p>
+                                <div class="d-flex justify-content-center flex-wrap gap-2">
+                                    <a href="/protein/P53_HUMAN" class="badge bg-light text-dark text-decoration-none p-2">P53_HUMAN</a>
+                                    <a href="/protein/P04637" class="badge bg-light text-dark text-decoration-none p-2">P04637 (TP53)</a>
+                                    <a href="/protein/P42680" class="badge bg-light text-dark text-decoration-none p-2">P42680 (SYK)</a>
+                                    <a href="/protein/P38398" class="badge bg-light text-dark text-decoration-none p-2">P38398 (BRCA1)</a>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <div class="text-center">
-                        <small class="text-muted">Examples: P53_HUMAN, TP53, P42680, SYK, Q9Y243, PAK7</small>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Example Usage -->
-    <section class="container my-5">
-        <h2 class="text-center mb-4">Example Usage</h2>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Visualize AlphaFold Structure</h5>
-                        <p class="card-text">Explore the 3D structure of proteins predicted by AlphaFold.</p>
-                        <a href="/protein/P53_HUMAN?id_type=uniprot" class="btn btn-primary">View TP53 Structure</a>
+    <!-- Examples -->
+    <section class="example-section">
+        <div class="container">
+            <h2 class="section-title display-5">Explore Capabilities</h2>
+            
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="card example-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Structure Visualization</h5>
+                            <p class="card-text">Explore high-resolution 3D structures of proteins predicted by AlphaFold.</p>
+                            <a href="/protein/P53_HUMAN" class="btn btn-primary btn-sm">View Example</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Explore Protein Networks</h5>
-                        <p class="card-text">Visualize protein-protein interaction networks and discover relationships.</p>
-                        <a href="/network/P53_HUMAN" class="btn btn-primary">View TP53 Network</a>
+                
+                <div class="col-md-6 col-lg-3">
+                    <div class="card example-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Network Analysis</h5>
+                            <p class="card-text">Visualize protein interaction networks and discover relationships.</p>
+                            <a href="/network/P53_HUMAN" class="btn btn-primary btn-sm">View Example</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Analyze Multiple Proteins</h5>
-                        <p class="card-text">Compare multiple proteins and find common interactors.</p>
-                        <a href="/analyze" class="btn btn-primary">Start Analysis</a>
+                
+                <div class="col-md-6 col-lg-3">
+                    <div class="card example-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Multiple Protein Analysis</h5>
+                            <p class="card-text">Compare proteins and find common interactors or structural features.</p>
+                            <a href="/analyze" class="btn btn-primary btn-sm">Try It</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">API Access</h5>
-                        <p class="card-text">Access protein data programmatically through our simple API.</p>
-                        <a href="/api/protein/P53_HUMAN" class="btn btn-primary">View API Example</a>
+                
+                <div class="col-md-6 col-lg-3">
+                    <div class="card example-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Phosphosite Analysis</h5>
+                            <p class="card-text">Analyze potential phosphorylation sites and structural similarities.</p>
+                            <a href="/phosphosite" class="btn btn-primary btn-sm">Explore</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -183,29 +476,48 @@
     <footer class="footer">
         <div class="container">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-lg-4 mb-4 mb-lg-0">
                     <h5>Protein Explorer</h5>
-                    <p>A tool for exploring protein structures and interactions.</p>
+                    <p>A comprehensive tool for exploring protein structures, interactions, and phosphorylation sites, powered by AlphaFold and other bioinformatics resources.</p>
                 </div>
-                <div class="col-md-3">
-                    <h5>Links</h5>
+                
+                <div class="col-md-4 col-lg-2 mb-4 mb-lg-0">
+                    <h5>Navigation</h5>
                     <ul class="list-unstyled">
-                        <li><a href="/">Home</a></li>
-                        <li><a href="/search">Search</a></li>
-                        <li><a href="/analyze">Analyze</a></li>
+                        <li class="mb-2"><a href="/">Home</a></li>
+                        <li class="mb-2"><a href="/search">Search</a></li>
+                        <li class="mb-2"><a href="/analyze">Analyze</a></li>
+                        <li class="mb-2"><a href="/phosphosite">Phosphosite Analysis</a></li>
                     </ul>
                 </div>
-                <div class="col-md-3">
+                
+                <div class="col-md-4 col-lg-3 mb-4 mb-lg-0">
                     <h5>External Resources</h5>
                     <ul class="list-unstyled">
-                        <li><a href="https://alphafold.ebi.ac.uk/" target="_blank">AlphaFold DB</a></li>
-                        <li><a href="https://www.uniprot.org/" target="_blank">UniProt</a></li>
-                        <li><a href="https://string-db.org/" target="_blank">STRING</a></li>
+                        <li class="mb-2"><a href="https://alphafold.ebi.ac.uk/" target="_blank">AlphaFold Database</a></li>
+                        <li class="mb-2"><a href="https://www.uniprot.org/" target="_blank">UniProt</a></li>
+                        <li class="mb-2"><a href="https://string-db.org/" target="_blank">STRING</a></li>
+                        <li class="mb-2"><a href="https://www.phosphosite.org/" target="_blank">PhosphositePlus</a></li>
                     </ul>
                 </div>
+                
+                <div class="col-md-4 col-lg-3">
+                    <h5>API Access</h5>
+                    <p>Access protein data programmatically through our simple REST API.</p>
+                    <a href="/api/protein/P53_HUMAN" class="btn btn-outline-light btn-sm">View API Example</a>
+                </div>
             </div>
-            <hr>
-            <p class="text-center">&copy; 2025 Protein Explorer</p>
+            
+            <div class="footer-bottom">
+                <div class="row">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <p class="mb-0">&copy; 2025 Protein Explorer. All rights reserved.</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <p class="mb-0">Built with <i class="bi bi-heart-fill text-danger"></i> for the scientific community</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </footer>
 

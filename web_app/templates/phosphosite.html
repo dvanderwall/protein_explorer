@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phosphosite Structural Analysis - Protein Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .phosphosite-table {
+            font-size: 0.9rem;
+        }
+        .motif-sequence {
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        .site-link {
+            font-weight: bold;
+            cursor: pointer;
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        .site-link:hover {
+            text-decoration: underline;
+        }
+        .match-card {
+            margin-bottom: 1.5rem;
+        }
+        .match-table td, .match-table th {
+            padding: 0.5rem;
+        }
+        .low-rmsd {
+            background-color: #d4edda;
+        }
+        .medium-rmsd {
+            background-color: #fff3cd;
+        }
+        .high-rmsd {
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">Protein Explorer</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/search">Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analyze">Analyze</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/phosphosite">Phosphosite Analysis</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content Section -->
+    <div class="container my-5">
+        <h1 class="mb-4">Phosphosite Structural Analysis</h1>
+        
+        <!-- Error message -->
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <!-- Search Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Select Protein</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="id_type" class="form-label">Search by:</label>
+                                <select class="form-select" id="id_type" name="id_type">
+                                    <option value="uniprot">UniProt ID</option>
+                                    <option value="gene">Gene Symbol</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="mb-3">
+                                <label for="identifier" class="form-label">Identifier:</label>
+                                <input type="text" class="form-control" id="identifier" name="identifier" 
+                                        placeholder="Enter UniProt ID or gene symbol" required>
+                                <div class="form-text">
+                                    Examples: 
+                                    <span class="badge bg-secondary uniprot-example">P04637</span>
+                                    <span class="badge bg-secondary gene-example">TP53</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="mb-3 w-100">
+                                <button type="submit" class="btn btn-primary w-100">Analyze</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        {% if protein_info %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">{{ protein_info.gene_symbol }} ({{ protein_info.uniprot_id }})</h5>
+            </div>
+            <div class="card-body">
+                <h5>{{ protein_info.name }}</h5>
+                <div class="d-flex flex-wrap mt-3">
+                    <a href="/protein/{{ protein_info.uniprot_id }}" class="btn btn-outline-primary me-2 mb-2">
+                        View Full Protein Details
+                    </a>
+                    <a href="/network/{{ protein_info.uniprot_id }}" class="btn btn-outline-primary me-2 mb-2">
+                        View Interaction Network
+                    </a>
+                    <a href="https://www.uniprot.org/uniprotkb/{{ protein_info.uniprot_id }}" 
+                       class="btn btn-outline-secondary me-2 mb-2" target="_blank">
+                        View on UniProt
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phosphorylation Sites -->
+        {% if phosphosites %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Potential Phosphorylation Sites</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover phosphosite-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Site</th>
+                                <th>Motif (-7 to +7)</th>
+                                <th>Mean pLDDT</th>
+                                <th>Nearby Residues (10Å)</th>
+                                <th>Known in PhosphositePlus</th>
+                                <th>Structural Matches</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for site in phosphosites %}
+                            <tr>
+                                <td>
+                                    <strong id="site-{{ site.resno }}">{{ site.site }}</strong>
+                                </td>
+                                <td><code class="motif-sequence">{{ site.motif }}</code></td>
+                                <td>{{ site.mean_plddt }}</td>
+                                <td>{{ site.nearby_count }}</td>
+                                <td>{{ "Yes" if site.is_known else "No" }}</td>
+                                <td>
+                                    {% if structural_matches and site.site in structural_matches %}
+                                        <span class="badge bg-success">{{ structural_matches[site.site]|length }} matches</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No matches</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Structural Matches -->
+        {% if structural_matches %}
+        <h2 class="mb-3">Structural Similarity Matches</h2>
+        <p class="text-muted mb-4">
+            Showing phosphosites with structural similarity to other kinase-binding sites.
+            Lower RMSD values indicate higher structural similarity.
+        </p>
+        
+        <div class="row">
+            {% for site, matches in structural_matches.items() %}
+            <div class="col-md-6">
+                <div class="card match-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Site: {{ site }} Matches</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover match-table mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Target Protein</th>
+                                        <th>Target Site</th>
+                                        <th>RMSD (Å)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for match in matches %}
+                                    <tr class="{% if match.rmsd < 1.0 %}low-rmsd{% elif match.rmsd < 2.0 %}medium-rmsd{% elif match.rmsd > 3.0 %}high-rmsd{% endif %}">
+                                        <td>
+                                            <a href="/protein/{{ match.target_uniprot }}" target="_blank">
+                                                {{ match.target_uniprot }}
+                                            </a>
+                                        </td>
+                                        <td>{{ match.target_site }}</td>
+                                        <td>{{ "%.2f"|format(match.rmsd) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-5">
+        <div class="container">
+            <p class="text-center mb-0">&copy; 2025 Protein Explorer</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle examples based on selected ID type
+        document.getElementById('id_type')?.addEventListener('change', function() {
+            const idType = this.value;
+            const uniprotExamples = document.querySelectorAll('.uniprot-example');
+            const geneExamples = document.querySelectorAll('.gene-example');
+            
+            if (idType === 'uniprot') {
+                uniprotExamples.forEach(el => el.style.display = 'inline');
+                geneExamples.forEach(el => el.style.display = 'none');
+            } else {
+                uniprotExamples.forEach(el => el.style.display = 'none');
+                geneExamples.forEach(el => el.style.display = 'inline');
+            }
+        });
+    </script>
+</body>
+</html>
