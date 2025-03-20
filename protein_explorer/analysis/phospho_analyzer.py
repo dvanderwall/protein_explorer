@@ -12,10 +12,114 @@ from typing import Dict, List, Optional, Union, Tuple
 import logging
 from protein_explorer.analysis.phospho import analyze_phosphosites
 from protein_explorer.data.scaffold import get_protein_by_id, get_alphafold_structure
+# Global variable to store the loaded structural similarity data
+STRUCTURAL_SIMILARITY_DF = None
+
+def preload_structural_data(file_path: str = None) -> None:
+    """
+    Preload structural similarity data at application startup.
+    
+    Args:
+        file_path: Path to the data file (feather preferred, parquet as fallback)
+    """
+    global STRUCTURAL_SIMILARITY_DF
+    
+    if STRUCTURAL_SIMILARITY_DF is not None:
+        logger.info("Structural data already loaded")
+        return
+    
+    # Find the data file
+    if file_path is None:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(current_dir)
+        # Check for feather file first
+        feather_file = os.path.join(parent_dir, 'Combined_Kinome_10A_Master_Filtered_2.feather')
+        if os.path.exists(feather_file):
+            file_path = feather_file
+            is_feather = True
+        else:
+            # Fall back to parquet
+            parquet_file = os.path.join(parent_dir, 'Combined_Kinome_10A_Master_Filtered_2.parquet')
+            if os.path.exists(parquet_file):
+                file_path = parquet_file
+                is_feather = False
+            else:
+                logger.warning("No structural data file found, will load on first request")
+                return
+    else:
+        # Determine file type from extension
+        is_feather = file_path.endswith('.feather')
+    
+    try:
+        # Load the data
+        logger.info(f"Preloading structural data from: {file_path}")
+        import pandas as pd
+        if is_feather:
+            STRUCTURAL_SIMILARITY_DF = pd.read_feather(file_path)
+        else:
+            STRUCTURAL_SIMILARITY_DF = pd.read_parquet(file_path)
+        
+        # Create index for faster querying
+        logger.info("Creating query index")
+        STRUCTURAL_SIMILARITY_DF.set_index('Query', drop=False, inplace=True)
+        
+        logger.info(f"Successfully preloaded {len(STRUCTURAL_SIMILARITY_DF)} structural similarity records")
+    except Exception as e:
+        logger.error(f"Error preloading structural data: {e}")
+        logger.warning("Will attempt to load data on first request")
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def load_structural_similarity_data(parquet_file: str = None) -> pd.DataFrame:
+    """
+    Load structural similarity data from feather file.
+    
+    Args:
+        parquet_file: Path to the feather file with structural similarity data
+                    (kept the parameter name for backward compatibility)
+        
+    Returns:
+        Pandas DataFrame with structural similarity data
+    """
+    global STRUCTURAL_SIMILARITY_DF
+    
+    if STRUCTURAL_SIMILARITY_DF is not None:
+        logger.info("Using cached structural similarity data")
+        return STRUCTURAL_SIMILARITY_DF
+    
+    # Check if feather file exists, use default if not provided
+    if parquet_file is None:
+        # Try to find the feather file in the parent directory
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(current_dir)
+        feather_file = os.path.join(parent_dir, 'Combined_Kinome_10A_Master_Filtered_2.feather')
+    else:
+        # Replace .parquet with .feather
+        feather_file = parquet_file.replace('.parquet', '.feather')
+    
+    if not os.path.exists(feather_file):
+        logger.error(f"Feather file not found: {feather_file}")
+        raise FileNotFoundError(f"Structural similarity data file not found: {feather_file}")
+    
+    try:
+        # Read feather file
+        logger.info(f"Reading feather file: {feather_file}")
+        import pandas as pd
+        STRUCTURAL_SIMILARITY_DF = pd.read_feather(feather_file)
+        
+        # Create indexes for faster querying
+        logger.info("Creating query index")
+        STRUCTURAL_SIMILARITY_DF.set_index('Query', drop=False, inplace=True)
+        
+        logger.info(f"Loaded {len(STRUCTURAL_SIMILARITY_DF)} structural similarity records")
+        return STRUCTURAL_SIMILARITY_DF
+    except Exception as e:
+        logger.error(f"Error reading feather file: {e}")
+        raise ValueError(f"Error reading structural similarity data: {e}")
+
 
 def get_protein_data(identifier: str, id_type: str = 'uniprot') -> Dict:
     """
@@ -148,29 +252,26 @@ def find_structural_matches(uniprot_id: str, phosphosites: List[Dict],
     Args:
         uniprot_id: UniProt ID of the protein
         phosphosites: List of phosphosite dictionaries from analyze_phosphosites
-        parquet_file: Path to the parquet file with structural similarity data
+        parquet_file: Path to the data file (parameter kept for backward compatibility)
         top_n: Number of top matches to return per site
         
     Returns:
         Dictionary mapping site IDs to lists of match dictionaries
     """
+    global STRUCTURAL_SIMILARITY_DF
     logger.info(f"Finding structural matches for {uniprot_id}")
     
-    # Check if parquet file exists, use default if not provided
-    if parquet_file is None:
-        # Try to find the parquet file in the parent directory
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        parent_dir = os.path.dirname(current_dir)
-        parquet_file = os.path.join(parent_dir, 'Combined_Kinome_10A_Master_Filtered_2.parquet')
-    
-    if not os.path.exists(parquet_file):
-        logger.error(f"Parquet file not found: {parquet_file}")
-        raise FileNotFoundError(f"Structural similarity data file not found: {parquet_file}")
-    
     try:
-        # Read parquet file
-        logger.info(f"Reading parquet file: {parquet_file}")
-        df = pd.read_parquet(parquet_file)
+        # Use preloaded data if available, otherwise load it now
+        if STRUCTURAL_SIMILARITY_DF is None:
+            preload_structural_data(parquet_file)
+        
+        # If still None after trying to load, raise error
+        if STRUCTURAL_SIMILARITY_DF is None:
+            logger.error("Structural similarity data not available")
+            raise ValueError("Structural similarity data not available")
+        
+        df = STRUCTURAL_SIMILARITY_DF
         
         # Create site IDs in the format UniprotID_ResNo
         site_ids = [f"{uniprot_id}_{site['resno']}" for site in phosphosites]
@@ -178,33 +279,35 @@ def find_structural_matches(uniprot_id: str, phosphosites: List[Dict],
         # Find matches and sort by RMSD
         matches = []
         for site_id in site_ids:
-            site_matches = df[df['Query'] == site_id].sort_values('RMSD').head(top_n)
-            
-            if not site_matches.empty:
-                for _, row in site_matches.iterrows():
-                    query_parts = row['Query'].split('_')
-                    target_parts = row['Target'].split('_')
-                    
-                    # Only add if we can parse the site numbers
-                    if len(query_parts) > 1 and len(target_parts) > 1:
-                        try:
-                            query_site = int(query_parts[-1])
-                            target_uniprot = target_parts[0]
-                            target_site = int(target_parts[-1])
-                            
-                            # Find the corresponding site data
-                            site_data = next((s for s in phosphosites if s['resno'] == query_site), None)
-                            site_type = site_data['site'][0] if site_data else '?'
-                            
-                            matches.append({
-                                'query_uniprot': uniprot_id,
-                                'query_site': f"{site_type}{query_site}",
-                                'target_uniprot': target_uniprot,
-                                'target_site': target_parts[-1],
-                                'rmsd': row['RMSD']
-                            })
-                        except (ValueError, IndexError) as e:
-                            logger.warning(f"Error parsing site ID: {e}")
+            # Use efficient lookup with index
+            if site_id in df.index:
+                site_matches = df.loc[[site_id]].sort_values('RMSD').head(top_n)
+                
+                if not site_matches.empty:
+                    for _, row in site_matches.iterrows():
+                        query_parts = row['Query'].split('_')
+                        target_parts = row['Target'].split('_')
+                        
+                        # Only add if we can parse the site numbers
+                        if len(query_parts) > 1 and len(target_parts) > 1:
+                            try:
+                                query_site = int(query_parts[-1])
+                                target_uniprot = target_parts[0]
+                                target_site = int(target_parts[-1])
+                                
+                                # Find the corresponding site data
+                                site_data = next((s for s in phosphosites if s['resno'] == query_site), None)
+                                site_type = site_data['site'][0] if site_data else '?'
+                                
+                                matches.append({
+                                    'query_uniprot': uniprot_id,
+                                    'query_site': f"{site_type}{query_site}",
+                                    'target_uniprot': target_uniprot,
+                                    'target_site': target_parts[-1],
+                                    'rmsd': row['RMSD']
+                                })
+                            except (ValueError, IndexError) as e:
+                                logger.warning(f"Error parsing site ID: {e}")
         
         # Group by query site
         structural_matches = {}

@@ -1,0 +1,7 @@
+echo "# Large data files" >> .gitignore
+echo "Combined_Kinome_10A_Master_Filtered_2.parquet" >> .gitignore
+echo "Combined_Kinome_10A_Master_Filtered_2.feather" >> .gitignore
+echo "ClinVar*.vcf" >> .gitignore
+echo "ClinVar*.txt" >> .gitignore
+echo "*.parquet" >> .gitignore
+echo "*.feather" >> .gitignore
