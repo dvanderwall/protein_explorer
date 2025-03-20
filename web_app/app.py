@@ -17,6 +17,25 @@ from protein_explorer.analysis.phospho import analyze_phosphosites
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import protein_explorer as pe
 
+# Preload structural similarity data at application startup
+try:
+    print("Preloading structural similarity data...")
+    from protein_explorer.analysis.phospho_analyzer import preload_structural_data
+    
+    # Check for feather file first, fall back to parquet
+    feather_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 
+                             'Combined_Kinome_10A_Master_Filtered_2.feather')
+    if os.path.exists(feather_file):
+        preload_structural_data(feather_file)
+    else:
+        parquet_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 
+                                 'Combined_Kinome_10A_Master_Filtered_2.parquet')
+        preload_structural_data(parquet_file)
+    
+    print("Structural similarity data preloaded successfully")
+except Exception as e:
+    print(f"Warning: Failed to preload structural similarity data: {e}")
+    print("Data will be loaded on first request (may cause delay)")
 
 """
 Add this code near the top of app.py, just after the imports and before the Flask app initialization
@@ -469,10 +488,9 @@ def phosphosite_analysis():
             return render_template('phosphosite.html', error="Please enter an identifier")
         
         try:
-            # Get the parquet file path
             parquet_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
-                                     'Combined_Kinome_10A_Master_Filtered_2.parquet')
-            
+                         'Combined_Kinome_10A_Master_Filtered_2.feather')
+
             # Run the full analysis
             results = analyze_protein(identifier, id_type, parquet_file)
             
