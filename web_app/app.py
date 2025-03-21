@@ -509,5 +509,10 @@ def phosphosite_analysis():
     # GET request - show empty form
     return render_template('phosphosite.html')
 
+@app.route('/faq')
+def faq():
+    """Render the FAQ page."""
+    return render_template('faq.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
