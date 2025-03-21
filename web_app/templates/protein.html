@@ -41,6 +41,9 @@
                         <a class="nav-link" href="/phosphosite">Phosphosite Analysis</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="/site-search">Site Search</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/faq">FAQ</a>
                     </li>
                 </ul>
@@ -221,7 +224,7 @@
                                 <tbody>
                                     {% for site in phosphosites %}
                                     <tr>
-                                        <td><a href="#" class="site-link" data-resno="{{ site.resno }}">{{ site.site }}</a></td>
+                                        <td><a href="/site/{{ protein.get('uniprot_id') }}/{{ site.site }}" class="site-link" data-resno="{{ site.resno }}">{{ site.site }}</a></td>
                                         <td><code class="motif-sequence">{{ site.motif }}</code></td>
                                         <td>{{ site.mean_plddt }}</td>
                                         <td>{{ site.nearby_count }}</td>
@@ -249,5 +252,28 @@
     <!-- MolStar JS -->
     <script src="https://www.alphafold.ebi.ac.uk/assets/js/molstar.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers to site links (if they exist)
+            const siteLinks = document.querySelectorAll('.site-link');
+            siteLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const siteName = this.textContent.trim();
+                    const uniprotId = '{{ protein.get("uniprot_id") }}';
+                    
+                    if (e.ctrlKey || e.metaKey) {
+                        // If control/command key is pressed, proceed with default behavior (open in new tab)
+                        return;
+                    }
+                    
+                    // Navigate to the site detail page
+                    window.location.href = `/site/${uniprotId}/${siteName}`;
+                    
+                    e.preventDefault();
+                });
+            });
+        });
+    </script>
 </body>
 </html>

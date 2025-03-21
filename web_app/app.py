@@ -509,6 +509,225 @@ def phosphosite_analysis():
     # GET request - show empty form
     return render_template('phosphosite.html')
 
+@app.route('/site/<uniprot_id>/<site>')
+def site_detail(uniprot_id, site):
+    """Display detailed information about a specific phosphorylation site."""
+    try:
+        # Get protein data
+        protein_data = pe.data.get_protein_by_id(uniprot_id=uniprot_id)
+        
+        # Get the sequence from metadata
+        sequence = protein_data.get('metadata', {}).get('sequence', {}).get('value')
+        if not sequence:
+            return render_template('error.html', error=f"Protein sequence not found for {uniprot_id}")
+            
+        # Get structure
+        structure = pe.data.get_alphafold_structure(uniprot_id)
+        if not structure:
+            return render_template('error.html', error=f"Protein structure not found for {uniprot_id}")
+        
+        # Parse the site string to get type and residue number
+        import re
+        site_match = re.match(r'([A-Z])(\d+)', site)
+        if not site_match:
+            return render_template('error.html', error=f"Invalid site format: {site}")
+            
+        site_type = site_match.group(1)
+        site_number = int(site_match.group(2))
+        
+        # Analyze phosphosites to get information about this specific site
+        all_phosphosites = pe.analysis.phospho.analyze_phosphosites(sequence, structure, uniprot_id)
+        
+        # Find the specific site
+        site_data = next((s for s in all_phosphosites if s['site'] == site), None)
+        if not site_data:
+            return render_template('error.html', error=f"Site {site} not found in protein {uniprot_id}")
+        
+        # Get structural matches for this site
+        structural_matches = None
+        try:
+            # Import the phospho_analyzer module
+            from protein_explorer.analysis.phospho_analyzer import find_structural_matches
+            
+            # Find matches specifically for this site
+            all_matches = find_structural_matches(uniprot_id, [site_data])
+            structural_matches = all_matches.get(site, [])
+        except Exception as e:
+            logger.error(f"Error finding structural matches: {e}")
+            # Continue without matches
+        
+        # Create structure visualization focused on the site
+        structure_html = pe.visualization.visualize_structure(
+            structure,
+            sequence=sequence
+        )
+        
+        # Create a 3D model highlighting the specific site
+        site_structure_html = create_site_focused_model(structure, site_number, site_type)
+        
+        return render_template(
+            'site.html',
+            protein=protein_data,
+            site=site,
+            site_data=site_data,
+            structure_html=structure_html,
+            site_structure_html=site_structure_html,
+            structural_matches=structural_matches
+        )
+    except Exception as e:
+        logger.error(f"Error in site detail view: {e}")
+        return render_template('error.html', error=str(e))
+
+def create_site_focused_model(structure_data, residue_number, residue_type):
+    """
+    Create a 3D model visualization focused on a specific residue.
+    Highlights the residue and its surrounding environment.
+    """
+    # Use the existing visualize_structure function but add a highlight for the specific residue
+    import base64
+    
+    # Base64 encode the PDB data
+    pdb_base64 = base64.b64encode(structure_data.encode()).decode()
+    
+    # Create a customized version of the NGL viewer script that focuses on the site
+    js_code = f"""
+    <style>
+        .site-viewer {{
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }}
+        .site-info-panel {{
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 8px;
+            font-size: 14px;
+            z-index: 100;
+        }}
+    </style>
+    
+    <div class="site-viewer">
+        <div id="site-viewer-container" style="width: 100%; height: 100%;"></div>
+        <div class="site-info-panel">
+            <strong>Site:</strong> {residue_type}{residue_number}<br>
+            <strong>View:</strong> <span id="view-mode">Site Environment</span>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/gh/arose/ngl@v2.0.0-dev.37/dist/ngl.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {{
+            // Create NGL Stage object
+            var stage = new NGL.Stage('site-viewer-container', {{backgroundColor: "white"}});
+            
+            // Handle window resizing
+            window.addEventListener('resize', function() {{
+                stage.handleResize();
+            }}, false);
+            
+            // Load PDB data from base64 string
+            var pdbBlob = new Blob([atob('{pdb_base64}')], {{type: 'text/plain'}});
+            
+            // Load the structure
+            stage.loadFile(pdbBlob, {{ext: 'pdb'}}).then(function (component) {{
+                // Add cartoon representation for the whole protein
+                component.addRepresentation("cartoon", {{
+                    color: "chainid",
+                    opacity: 0.5
+                }});
+                
+                // Define selection for the specific residue
+                var siteSelection = "{residue_number} and .{residue_type}";
+                
+                // Add ball and stick representation for the residue
+                component.addRepresentation("ball+stick", {{
+                    sele: siteSelection,
+                    color: "element",
+                    aspectRatio: 1.5,
+                    scale: 1.2
+                }});
+                
+                // Add a surrounding environment (5 Angstroms)
+                var environmentSelection = siteSelection + " or (" + siteSelection + " around 5)";
+                component.addRepresentation("licorice", {{
+                    sele: environmentSelection + " and not " + siteSelection,
+                    color: "element",
+                    opacity: 0.7,
+                    scale: 0.8
+                }});
+                
+                // Add labels for nearby residues
+                component.addRepresentation("label", {{
+                    sele: environmentSelection,
+                    color: "#333333",
+                    labelType: "format",
+                    labelFormat: "{{resname}}{{resno}}",
+                    labelGrouping: "residue",
+                    xOffset: 1.0,
+                    yOffset: 0.0,
+                    zOffset: 0.0,
+                    attachment: "middle-center",
+                    showBackground: true,
+                    backgroundColor: "white",
+                    backgroundOpacity: 0.5
+                }});
+                
+                // Focus on the selection
+                component.autoView(environmentSelection, 2000);
+                
+                // Add button to toggle between views
+                var viewModeText = document.getElementById('view-mode');
+                var isFullView = false;
+                
+                viewModeText.addEventListener('click', function() {{
+                    isFullView = !isFullView;
+                    
+                    if (isFullView) {{
+                        // Show full protein view
+                        viewModeText.textContent = "Full Protein";
+                        component.autoView();
+                    }} else {{
+                        // Show site environment
+                        viewModeText.textContent = "Site Environment";
+                        component.autoView(environmentSelection, 2000);
+                    }}
+                }});
+            }});
+        }});
+    </script>
+    """
+    
+    return js_code
+
+@app.route('/site-search', methods=['GET', 'POST'])
+def site_search():
+    """Search for a specific phosphorylation site."""
+    if request.method == 'POST':
+        # Get form data
+        uniprot_id = request.form.get('uniprot_id', '')
+        site = request.form.get('site', '')
+        
+        if not uniprot_id:
+            return render_template('site-search.html', error="Please enter a UniProt ID")
+        
+        if not site:
+            return render_template('site-search.html', error="Please enter a site identifier")
+            
+        # Validate site format (S, T, or Y followed by a number)
+        import re
+        if not re.match(r'^[STY]\d+$', site):
+            return render_template('site-search.html', error="Invalid site format. Expected format: S123, T45, Y678, etc.")
+            
+        # Redirect to site detail page
+        return redirect(url_for('site_detail', uniprot_id=uniprot_id, site=site))
+    
+    # GET request - show search form
+    return render_template('site-search.html')
+
 @app.route('/faq')
 def faq():
     """Render the FAQ page."""

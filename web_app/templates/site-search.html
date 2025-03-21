@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Search - Protein Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">Protein Explorer</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/search">Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analyze">Analyze</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/phosphosite">Phosphosite Analysis</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/site-search">Site Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/faq">FAQ</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Search Section -->
+    <section class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="text-center mb-4">Search Phosphorylation Sites</h1>
+                
+                {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+                
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post" action="/site-search">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="uniprot_id" class="form-label">UniProt ID:</label>
+                                        <input type="text" class="form-control" id="uniprot_id" name="uniprot_id" 
+                                               placeholder="Enter UniProt ID (e.g., P04637)" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="site" class="form-label">Site:</label>
+                                        <input type="text" class="form-control" id="site" name="site" 
+                                               placeholder="Enter site (e.g., S15, T18)" required>
+                                        <div class="form-text">
+                                            Format: letter (S/T/Y) followed by residue number
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">View Site</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Popular Examples -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Example Sites</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>TP53 (P04637) Sites:</h6>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <a href="/site/P04637/S15" class="badge bg-primary text-decoration-none p-2">S15</a>
+                                    <a href="/site/P04637/T18" class="badge bg-primary text-decoration-none p-2">T18</a>
+                                    <a href="/site/P04637/S20" class="badge bg-primary text-decoration-none p-2">S20</a>
+                                    <a href="/site/P04637/S33" class="badge bg-primary text-decoration-none p-2">S33</a>
+                                    <a href="/site/P04637/S46" class="badge bg-primary text-decoration-none p-2">S46</a>
+                                    <a href="/site/P04637/T55" class="badge bg-primary text-decoration-none p-2">T55</a>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Other Popular Sites:</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="/site/P42680/Y346" class="badge bg-info text-decoration-none p-2">SYK Y346</a>
+                                    <a href="/site/P06239/Y394" class="badge bg-info text-decoration-none p-2">LCK Y394</a>
+                                    <a href="/site/P38398/S1497" class="badge bg-info text-decoration-none p-2">BRCA1 S1497</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-5">
+        <div class="container">
+            <p class="text-center mb-0">&copy; 2025 Protein Explorer</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

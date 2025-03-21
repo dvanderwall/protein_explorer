@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site }} in {{ protein.get('gene_symbol', protein.get('uniprot_id')) }} - Protein Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .metadata-card {
+            margin-bottom: 1.5rem;
+        }
+        .structure-viewer {
+            min-height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .site-viewer {
+            min-height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .motif-box {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 1.2rem;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .motif-box .aa {
+            flex: 0 0 auto;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 1px;
+            border-radius: 3px;
+        }
+        .motif-box .aa.highlighted {
+            background-color: #ff5722;
+            color: white;
+            font-weight: bold;
+        }
+        .motif-box .aa.polar {
+            background-color: #bbdefb;
+        }
+        .motif-box .aa.non-polar {
+            background-color: #ffecb3;
+        }
+        .motif-box .aa.acidic {
+            background-color: #ffcdd2;
+        }
+        .motif-box .aa.basic {
+            background-color: #c8e6c9;
+        }
+        .motif-box .aa.special {
+            background-color: #e1bee7;
+        }
+        .motif-position {
+            font-size: 0.7rem;
+            text-align: center;
+            color: #666;
+        }
+        .match-table {
+            font-size: 0.9rem;
+        }
+        .low-rmsd {
+            background-color: #d4edda;
+        }
+        .medium-rmsd {
+            background-color: #fff3cd;
+        }
+        .high-rmsd {
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">Protein Explorer</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/search">Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analyze">Analyze</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/phosphosite">Phosphosite Analysis</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/faq">FAQ</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Site Information -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-md-8">
+                <h1>
+                    {{ site }} <span class="text-muted">in {{ protein.get('gene_symbol', '') }} ({{ protein.get('uniprot_id', '') }})</span>
+                </h1>
+                
+                {% if protein.get('metadata', {}).get('proteinDescription', {}).get('recommendedName', {}).get('fullName', {}).get('value') %}
+                <p class="lead">
+                    {{ protein.get('metadata', {}).get('proteinDescription', {}).get('recommendedName', {}).get('fullName', {}).get('value') }}
+                </p>
+                {% endif %}
+                
+                <div class="d-flex flex-wrap mb-4">
+                    <a href="/protein/{{ protein.get('uniprot_id') }}" class="btn btn-primary me-2 mb-2">
+                        View Full Protein
+                    </a>
+                    <a href="/network/{{ protein.get('uniprot_id') }}" class="btn btn-outline-primary me-2 mb-2">
+                        View Interaction Network
+                    </a>
+                    <a href="/phosphosite" class="btn btn-outline-secondary me-2 mb-2">
+                        Phosphosite Analysis
+                    </a>
+                </div>
+                
+                <!-- Site-specific Kinase Information Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Phosphorylation Site {{ site }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Sequence Motif</h5>
+                                <div class="motif-box">
+                                    {% for aa in site_data.motif %}
+                                        {% set pos = loop.index - 8 %}
+                                        {% if pos == 0 %}
+                                            <div class="aa highlighted">{{ aa }}</div>
+                                        {% else %}
+                                            {% if aa in 'STYCN' %}
+                                                <div class="aa polar">{{ aa }}</div>
+                                            {% elif aa in 'AVILMFWPG' %}
+                                                <div class="aa non-polar">{{ aa }}</div>
+                                            {% elif aa in 'DE' %}
+                                                <div class="aa acidic">{{ aa }}</div>
+                                            {% elif aa in 'KRH' %}
+                                                <div class="aa basic">{{ aa }}</div>
+                                            {% else %}
+                                                <div class="aa special">{{ aa }}</div>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="motif-position">
+                                    {% for i in range(-7, 8) %}
+                                        <span style="width: 2rem; display: inline-block; text-align: center;">{{ i }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Site Properties</h5>
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <th>Mean pLDDT Score:</th>
+                                            <td>{{ site_data.mean_plddt }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Nearby Residues (10Å):</th>
+                                            <td>{{ site_data.nearby_count }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Known in PhosphositePlus:</th>
+                                            <td>
+                                                {% if site_data.is_known %}
+                                                <span class="badge bg-success">Yes</span>
+                                                {% else %}
+                                                <span class="badge bg-warning text-dark">No</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <!-- Protein Details -->
+                <div class="card metadata-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Protein Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">UniProt ID:</dt>
+                            <dd class="col-sm-7">{{ protein.get('uniprot_id', '') }}</dd>
+                            
+                            {% if protein.get('gene_symbol') %}
+                            <dt class="col-sm-5">Gene Symbol:</dt>
+                            <dd class="col-sm-7">{{ protein.get('gene_symbol', '') }}</dd>
+                            {% endif %}
+                            
+                            {% if protein.get('metadata', {}).get('sequence', {}).get('length') %}
+                            <dt class="col-sm-5">Length:</dt>
+                            <dd class="col-sm-7">{{ protein.get('metadata', {}).get('sequence', {}).get('length') }} amino acids</dd>
+                            {% endif %}
+                            
+                            {% if protein.get('metadata', {}).get('organism', {}).get('scientificName') %}
+                            <dt class="col-sm-5">Organism:</dt>
+                            <dd class="col-sm-7">{{ protein.get('metadata', {}).get('organism', {}).get('scientificName') }}</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+                
+                <!-- Phosphorylation Information -->
+                <div class="card metadata-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Phosphorylation Info</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Phosphorylation is a post-translational modification that can alter protein function, localization, and interactions. {{ site[0] }} residues are common phosphorylation targets.</p>
+                        
+                        <p>This site has {{ structural_matches|length }} structural matches with other known phosphorylation sites, which may indicate similar functions or regulatory mechanisms.</p>
+                        
+                        {% if site_data.is_known %}
+                        <div class="alert alert-info">
+                            <strong>Note:</strong> This site is documented in PhosphositePlus as a known phosphorylation site.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Site Visualization -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Site Environment View</h5>
+                    </div>
+                    <div class="card-body p-0 site-viewer">
+                        {{ site_structure_html|safe }}
+                    </div>
+                    <div class="card-footer text-muted small">
+                        3D view focused on the {{ site }} residue and its environment. Click "View Mode" to toggle between site focus and full protein view.
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Full Protein Structure</h5>
+                    </div>
+                    <div class="card-body p-0 site-viewer">
+                        {{ structure_html|safe }}
+                    </div>
+                    <div class="card-footer text-muted small">
+                        Complete protein 3D structure from AlphaFold prediction.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Structural Matches -->
+        {% if structural_matches %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Structural Similarity Matches</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">The following phosphorylation sites have structural similarity to {{ site }}. 
+                        Lower RMSD values indicate higher structural similarity.</p>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover match-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Target Protein</th>
+                                        <th>Target Site</th>
+                                        <th>RMSD (Å)</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for match in structural_matches %}
+                                    <tr class="{% if match.rmsd < 1.0 %}low-rmsd{% elif match.rmsd < 2.0 %}medium-rmsd{% elif match.rmsd > 3.0 %}high-rmsd{% endif %}">
+                                        <td>
+                                            <a href="/protein/{{ match.target_uniprot }}">
+                                                {{ match.target_uniprot }}
+                                            </a>
+                                        </td>
+                                        <td>{{ match.target_site }}</td>
+                                        <td>{{ "%.2f"|format(match.rmsd) }}</td>
+                                        <td>
+                                            <a href="/site/{{ match.target_uniprot }}/{{ match.target_site }}" class="btn btn-sm btn-outline-primary">
+                                                View Site
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-5">
+        <div class="container">
+            <p class="text-center mb-0">&copy; 2025 Protein Explorer</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
