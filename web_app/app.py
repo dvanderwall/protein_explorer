@@ -543,14 +543,14 @@ def site_detail(uniprot_id, site):
         if not site_data:
             return render_template('error.html', error=f"Site {site} not found in protein {uniprot_id}")
         
-        # Get structural matches for this site
         structural_matches = None
         try:
             # Import the phospho_analyzer module
             from protein_explorer.analysis.phospho_analyzer import find_structural_matches
             
-            # Find matches specifically for this site
-            all_matches = find_structural_matches(uniprot_id, [site_data])
+            # Find matches specifically for this site - modify to get all matches
+            # Change the top_n parameter to get all matches (or a larger number)
+            all_matches = find_structural_matches(uniprot_id, [site_data], top_n=None)  # Use None to get all matches
             structural_matches = all_matches.get(site, [])
         except Exception as e:
             logger.error(f"Error finding structural matches: {e}")
@@ -565,6 +565,18 @@ def site_detail(uniprot_id, site):
         # Create a 3D model highlighting the specific site
         site_structure_html = create_site_focused_model(structure, site_number, site_type)
         
+        # Format structural matches to be JSON-serializable if they aren't already
+        formatted_matches = []
+        if structural_matches:
+            for match in structural_matches:
+                formatted_matches.append({
+                    'query_uniprot': uniprot_id,
+                    'query_site': site,
+                    'target_uniprot': match.get('target_uniprot'),
+                    'target_site': match.get('target_site'),
+                    'rmsd': float(match.get('rmsd', 0))
+                })
+        
         return render_template(
             'site.html',
             protein=protein_data,
@@ -572,7 +584,7 @@ def site_detail(uniprot_id, site):
             site_data=site_data,
             structure_html=structure_html,
             site_structure_html=site_structure_html,
-            structural_matches=structural_matches
+            structural_matches=formatted_matches
         )
     except Exception as e:
         logger.error(f"Error in site detail view: {e}")

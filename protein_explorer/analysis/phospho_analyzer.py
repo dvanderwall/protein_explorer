@@ -245,7 +245,7 @@ def generate_mock_structure(sequence: str) -> Optional[str]:
         return None
 
 def find_structural_matches(uniprot_id: str, phosphosites: List[Dict], 
-                           parquet_file: str = None, top_n: int = 5) -> Dict[str, List[Dict]]:
+                           parquet_file: str = None, top_n: int = None) -> Dict[str, List[Dict]]:
     """
     Find structural matches for phosphosites in the kinome dataset.
     
@@ -281,7 +281,12 @@ def find_structural_matches(uniprot_id: str, phosphosites: List[Dict],
         for site_id in site_ids:
             # Use efficient lookup with index
             if site_id in df.index:
-                site_matches = df.loc[[site_id]].sort_values('RMSD').head(top_n)
+                if top_n is not None:
+                    # Only take top N matches
+                    site_matches = df.loc[[site_id]].sort_values('RMSD').head(top_n)
+                else:
+                    # Take all matches, still sorted by RMSD
+                    site_matches = df.loc[[site_id]].sort_values('RMSD')
                 
                 if not site_matches.empty:
                     for _, row in site_matches.iterrows():
