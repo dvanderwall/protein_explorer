@@ -12,8 +12,15 @@ from typing import Dict, List, Optional, Union, Tuple
 import logging
 from protein_explorer.analysis.phospho import analyze_phosphosites
 from protein_explorer.data.scaffold import get_protein_by_id, get_alphafold_structure
-# Global variable to store the loaded structural similarity data
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Global variables to store loaded data
 STRUCTURAL_SIMILARITY_DF = None
+PHOSPHOSITE_SUPP_DATA = None
+PHOSPHOSITE_SUPP_DICT = None
 
 def preload_structural_data(file_path: str = None) -> None:
     """
@@ -67,6 +74,50 @@ def preload_structural_data(file_path: str = None) -> None:
     except Exception as e:
         logger.error(f"Error preloading structural data: {e}")
         logger.warning("Will attempt to load data on first request")
+
+
+def load_phosphosite_supp_data(file_path: str = None) -> pd.DataFrame:
+    """
+    Load the phosphosite supplementary data.
+    
+    Args:
+        file_path: Path to the supplementary data file
+        
+    Returns:
+        Pandas DataFrame with supplementary data
+    """
+    global PHOSPHOSITE_SUPP_DATA, PHOSPHOSITE_SUPP_DICT
+    
+    if PHOSPHOSITE_SUPP_DATA is not None:
+        logger.info("Using cached phosphosite supplementary data")
+        return PHOSPHOSITE_SUPP_DATA
+    
+    # Find the data file if not provided
+    if file_path is None:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(current_dir)
+        file_path = os.path.join(parent_dir, 'PhosphositeSuppData.feather')
+    
+    if not os.path.exists(file_path):
+        logger.warning(f"Supplementary data file not found: {file_path}")
+        return None
+    
+    try:
+        # Load the data
+        logger.info(f"Loading phosphosite supplementary data from: {file_path}")
+        PHOSPHOSITE_SUPP_DATA = pd.read_feather(file_path)
+        
+        # Create dictionary for faster lookups
+        logger.info("Creating lookup dictionary")
+        PHOSPHOSITE_SUPP_DICT = {row['site_id']: row.to_dict() for _, row in PHOSPHOSITE_SUPP_DATA.iterrows()}
+        
+        logger.info(f"Successfully loaded {len(PHOSPHOSITE_SUPP_DATA)} phosphosite supplementary records")
+        return PHOSPHOSITE_SUPP_DATA
+    except Exception as e:
+        logger.error(f"Error loading supplementary data: {e}")
+        return None
+
+        
 
 
 # Configure logging
@@ -157,9 +208,152 @@ def get_protein_data(identifier: str, id_type: str = 'uniprot') -> Dict:
         logger.error(f"Error retrieving protein data: {e}")
         raise ValueError(f"Error retrieving protein data: {e}")
 
+    
+def get_phosphosite_data(site_id: str) -> Optional[Dict]:
+    """
+    Get supplementary data for a specific phosphosite.
+    
+    Args:
+        site_id: The site ID in format 'UniProtID_ResidueNumber'
+        
+    Returns:
+        Dictionary with supplementary data or None if not found
+    """
+    global PHOSPHOSITE_SUPP_DATA, PHOSPHOSITE_SUPP_DICT
+    
+    # Load data if not already loaded
+    if PHOSPHOSITE_SUPP_DATA is None:
+        load_phosphosite_supp_data()
+    
+    # If still None, return None
+    if PHOSPHOSITE_SUPP_DATA is None:
+        return None
+    
+    # Use dictionary for faster lookup
+    if PHOSPHOSITE_SUPP_DICT is not None:
+        return PHOSPHOSITE_SUPP_DICT.get(site_id)
+    
+    # Fall back to DataFrame lookup
+    try:
+        site_data = PHOSPHOSITE_SUPP_DATA[PHOSPHOSITE_SUPP_DATA['site_id'] == site_id]
+        if not site_data.empty:
+            return site_data.iloc[0].to_dict()
+    except Exception as e:
+        logger.error(f"Error getting phosphosite data: {e}")
+    
+    return None
+
+def enhance_phosphosite(phosphosite: Dict, uniprot_id: str) -> Dict:
+    """
+    Enhance a phosphosite dictionary with supplementary data.
+    
+    Args:
+        phosphosite: Dictionary with phosphosite info
+        uniprot_id: UniProt ID
+        
+    Returns:
+        Enhanced phosphosite dictionary
+    """
+    if 'resno' not in phosphosite:
+        return phosphosite
+    
+    # Get site ID
+    site_id = f"{uniprot_id}_{phosphosite['resno']}"
+    
+    # Get supplementary data
+    supp_data = get_phosphosite_data(site_id)
+    if not supp_data:
+        return phosphosite
+    
+    # Create a new dictionary to avoid modifying the original
+    enhanced_site = phosphosite.copy()
+    
+    # Enhance with supplementary data
+    if 'motif_plddt' in supp_data and supp_data['motif_plddt'] is not None:
+        enhanced_site['mean_plddt'] = f"{supp_data['motif_plddt']:.1f}"
+    
+    if 'nearby_count' in supp_data and supp_data['nearby_count'] is not None:
+        enhanced_site['nearby_count'] = supp_data['nearby_count']
+    
+    if 'motif' in supp_data and supp_data['motif'] is not None:
+        enhanced_site['motif'] = supp_data['motif']
+    
+    # Add any other supplementary fields
+    for key in ['site_plddt', 'surface_accessibility', 'secondary_structure']:
+        if key in supp_data and supp_data[key] is not None:
+            enhanced_site[key] = supp_data[key]
+    
+    return enhanced_site
+
+def enhance_structural_matches(matches: List[Dict], site: str) -> List[Dict]:
+    """
+    Enhance structural matches with supplementary data.
+    
+    Args:
+        matches: List of structural match dictionaries
+        site: Query site string for logging
+        
+    Returns:
+        Enhanced list of matches
+    """
+    if not matches:
+        return matches
+    
+    logger.info(f"Enhancing {len(matches)} structural matches for {site}")
+    
+    # Ensure supplementary data is loaded
+    if PHOSPHOSITE_SUPP_DATA is None:
+        load_phosphosite_supp_data()
+    
+    enhanced_matches = []
+    for match in matches:
+        # Skip self-matches (RMSD ≈ 0)
+        if match.get('rmsd', 0) < 0.01:
+            continue
+        
+        # Get target info
+        target_uniprot = match.get('target_uniprot')
+        target_site = match.get('target_site')
+        
+        # Parse site number from target_site
+        import re
+        site_match = re.match(r'(\d+)', target_site)
+        if site_match:
+            resno = int(site_match.group(1))
+            target_id = f"{target_uniprot}_{resno}"
+            
+            # Get supplementary data
+            target_supp = get_phosphosite_data(target_id)
+            if target_supp:
+                # Create enhanced match
+                enhanced_match = match.copy()
+                
+                # Add supplementary data
+                if 'motif_plddt' in target_supp and target_supp['motif_plddt'] is not None:
+                    enhanced_match['plddt'] = f"{target_supp['motif_plddt']:.1f}"
+                
+                if 'nearby_count' in target_supp and target_supp['nearby_count'] is not None:
+                    enhanced_match['nearby_count'] = target_supp['nearby_count']
+                
+                if 'motif' in target_supp and target_supp['motif'] is not None:
+                    enhanced_match['motif'] = target_supp['motif']
+                
+                # Add additional fields
+                for key in ['site_plddt', 'surface_accessibility', 'secondary_structure']:
+                    if key in target_supp and target_supp[key] is not None:
+                        enhanced_match[key] = target_supp[key]
+                
+                enhanced_matches.append(enhanced_match)
+                continue
+        
+        # If no supplementary data, just add the original match
+        enhanced_matches.append(match)
+    
+    return enhanced_matches
+
 def get_phosphosites(uniprot_id: str) -> List[Dict]:
     """
-    Analyze potential phosphorylation sites for a protein.
+    Analyze potential phosphorylation sites for a protein, with supplementary data.
     
     Args:
         uniprot_id: UniProt ID of the protein
@@ -192,14 +386,21 @@ def get_phosphosites(uniprot_id: str) -> List[Dict]:
                 structure = mock_structure
             else:
                 raise ValueError(f"Protein structure not found for {uniprot_id}")
-            
+        
         # Analyze phosphosites
         phosphosites = analyze_phosphosites(sequence, structure, uniprot_id)
         
-        return phosphosites
+        # Enhance with supplementary data
+        enhanced_sites = []
+        for site in phosphosites:
+            enhanced_site = enhance_phosphosite(site, uniprot_id)
+            enhanced_sites.append(enhanced_site)
+        
+        return enhanced_sites
     except Exception as e:
         logger.error(f"Error analyzing phosphosites: {e}")
         raise ValueError(f"Error analyzing phosphosites: {e}")
+
     
 
 def generate_mock_structure(sequence: str) -> Optional[str]:
@@ -243,6 +444,7 @@ def generate_mock_structure(sequence: str) -> Optional[str]:
     except Exception as e:
         logger.error(f"Error generating mock structure: {e}")
         return None
+
 
 def find_structural_matches(uniprot_id: str, phosphosites: List[Dict], 
                            parquet_file: str = None, top_n: int = None) -> Dict[str, List[Dict]]:
@@ -351,12 +553,17 @@ def analyze_protein(identifier: str, id_type: str = 'uniprot',
         error_message = None
         
         try:
-            # Get phosphosites
+            # Get phosphosites with supplementary data
             phosphosites = get_phosphosites(uniprot_id)
             
             # Find structural matches
             try:
                 structural_matches = find_structural_matches(uniprot_id, phosphosites, parquet_file)
+                
+                # Enhance with supplementary data
+                for site, matches in structural_matches.items():
+                    structural_matches[site] = enhance_structural_matches(matches, site)
+                    
             except FileNotFoundError:
                 error_message = "Structural similarity data file not found"
                 logger.warning(error_message)
@@ -379,6 +586,735 @@ def analyze_protein(identifier: str, id_type: str = 'uniprot',
     except Exception as e:
         logger.error(f"Error in complete analysis: {e}")
         raise ValueError(f"Error in complete analysis: {e}")
+    
+
+def analyze_phosphosite_context(structure_data, site_number, site_type):
+    """
+    Analyze structural context around a phosphorylation site.
+    
+    Args:
+        structure_data: PDB format data as string
+        site_number: The residue number
+        site_type: The residue type (S, T, or Y)
+        
+    Returns:
+        Dictionary with structural context information
+    """
+    from Bio.PDB import PDBParser, NeighborSearch, Selection, Vector
+    import io
+    import numpy as np
+    
+    # Parse the PDB structure
+    parser = PDBParser(QUIET=True)
+    structure = parser.get_structure("protein", io.StringIO(structure_data))
+    
+    # Get all atoms
+    all_atoms = list(structure.get_atoms())
+    ns = NeighborSearch(all_atoms)
+    
+    # Find the target residue
+    target_residue = None
+    for model in structure:
+        for chain in model:
+            for residue in chain:
+                if residue.get_id()[1] == site_number:
+                    target_residue = residue
+                    break
+    
+    if not target_residue:
+        return {"error": f"Site {site_type}{site_number} not found in structure"}
+    
+    # Get center atom for the residue (CA or first atom)
+    if 'CA' in target_residue:
+        center_atom = target_residue['CA']
+    else:
+        # Use the first atom if CA not available
+        center_atom = next(target_residue.get_atoms())
+    
+    # Get the residue coordinates
+    center_coords = center_atom.get_coord()
+    
+    # Find nearby residues (8Å radius)
+    nearby_atoms = ns.search(center_coords, 8.0)
+    
+    # Group nearby atoms by residue
+    nearby_residues = {}
+    for atom in nearby_atoms:
+        residue = atom.get_parent()
+        resno = residue.get_id()[1]
+        
+        # Skip the target residue itself
+        if resno == site_number:
+            continue
+            
+        residue_name = residue.get_resname()
+        
+        # Add to nearby residues dictionary
+        if resno not in nearby_residues:
+            nearby_residues[resno] = {
+                "resname": residue_name,
+                "atoms": [],
+                "min_distance": float('inf')
+            }
+            
+        # Store the atom and its distance
+        dist = np.linalg.norm(atom.get_coord() - center_coords)
+        nearby_residues[resno]["atoms"].append({
+            "atom_name": atom.get_name(),
+            "distance": dist
+        })
+        
+        # Update minimum distance
+        if dist < nearby_residues[resno]["min_distance"]:
+            nearby_residues[resno]["min_distance"] = dist
+            
+    # Sort nearby residues by distance
+    sorted_nearby = sorted(
+        nearby_residues.items(), 
+        key=lambda x: x[1]["min_distance"]
+    )
+    
+    # Prepare results
+    nearby_info = [
+        {
+            "resno": resno,
+            "resname": data["resname"],
+            "min_distance": round(data["min_distance"], 2),
+            "atoms": len(data["atoms"])
+        }
+        for resno, data in sorted_nearby
+    ]
+    
+    # Count amino acid types within contact distance (5Å)
+    amino_acid_groups = {
+        "polar": ["SER", "THR", "TYR", "CYS", "ASN", "GLN"],
+        "nonpolar": ["ALA", "VAL", "ILE", "LEU", "MET", "PHE", "TRP", "PRO", "GLY"],
+        "acidic": ["ASP", "GLU"],
+        "basic": ["LYS", "ARG", "HIS"]
+    }
+    
+    contact_counts = {group: 0 for group in amino_acid_groups}
+    
+    for resno, data in sorted_nearby:
+        if data["min_distance"] <= 5.0:  # Only count residues within 5Å
+            for group, residues in amino_acid_groups.items():
+                if data["resname"] in residues:
+                    contact_counts[group] += 1
+                    break
+                    
+    # Calculate secondary structure
+    try:
+        from Bio.PDB.DSSP import DSSP
+        model = structure[0]  # Use first model
+        dssp = DSSP(model, io.StringIO(structure_data))
+        
+        # Get DSSP data for the target residue
+        chain_id = list(model.child_dict.keys())[0]  # Get first chain ID
+        dssp_key = (chain_id, site_number)
+        
+        if dssp_key in dssp:
+            # DSSP assigns: H (alpha helix), B (beta bridge), E (strand),
+            # G (3-10 helix), I (pi helix), T (turn), S (bend), or - (other)
+            ss_code = dssp[dssp_key][1]
+            
+            # Simplify to three main categories
+            if ss_code in ['H', 'G', 'I']:
+                secondary_structure = 'Helix'
+            elif ss_code in ['E', 'B']:
+                secondary_structure = 'Sheet'
+            else:
+                secondary_structure = 'Loop'
+        else:
+            secondary_structure = 'Unknown'
+    except:
+        # If DSSP fails, leave as unknown
+        secondary_structure = 'Unknown'
+    
+    # Calculate solvent accessibility
+    # We'll use a simple proxy based on neighbor count
+    # Fewer neighbors = more exposed
+    max_neighbors = 30  # Approximate maximum reasonable number of neighbors in 8Å
+    nearby_count = len(nearby_residues)
+    solvent_accessibility = max(0, min(100, (max_neighbors - nearby_count) / max_neighbors * 100))
+    
+    # Extract B-factor (pLDDT in AlphaFold) for the target residue
+    b_factors = [atom.get_bfactor() for atom in target_residue]
+    mean_plddt = sum(b_factors) / len(b_factors) if b_factors else None
+    
+    return {
+        "site": f"{site_type}{site_number}",
+        "nearby_residues": nearby_info[:10],  # Show top 10
+        "nearby_count": len(nearby_info),
+        "contact_distribution": contact_counts,
+        "secondary_structure": secondary_structure,
+        "solvent_accessibility": round(solvent_accessibility, 1),
+        "plddt": round(mean_plddt, 1) if mean_plddt else None
+    }
+
+
+def enhance_site_visualization(uniprot_id, site, supplementary_data=None):
+    """
+    Create an enhanced visualization of a phosphorylation site.
+    Integrates supplementary structural data and highlights structural features.
+    
+    Args:
+        uniprot_id: UniProt ID of the protein
+        site: Site identifier (e.g., "S15")
+        supplementary_data: Supplementary data for the site
+        
+    Returns:
+        HTML/JavaScript code for the visualization
+    """
+    from protein_explorer.data.scaffold import get_alphafold_structure
+    import re
+    import base64
+    
+    # Parse site to get residue number and type
+    site_match = re.match(r'([A-Z])(\d+)', site)
+    if not site_match:
+        return f"<div class='alert alert-danger'>Invalid site format: {site}</div>"
+    
+    site_type = site_match.group(1)
+    site_number = int(site_match.group(2))
+    
+    # Get structure
+    structure_data = get_alphafold_structure(uniprot_id)
+    if not structure_data:
+        return f"<div class='alert alert-danger'>Could not retrieve structure for {uniprot_id}</div>"
+    
+    # Base64 encode the structure
+    pdb_base64 = base64.b64encode(structure_data.encode()).decode()
+    
+    # Analyze structural context if not provided
+    if not supplementary_data:
+        from protein_explorer.analysis.phospho_analyzer import get_phosphosite_data
+        site_id = f"{uniprot_id}_{site_number}"
+        supplementary_data = get_phosphosite_data(site_id)
+    
+    # Default values if data not available
+    site_plddt = supplementary_data.get('site_plddt', 'N/A') if supplementary_data else 'N/A'
+    surface_access = supplementary_data.get('surface_accessibility', 'N/A') if supplementary_data else 'N/A'
+    nearby_count = supplementary_data.get('nearby_count', 'N/A') if supplementary_data else 'N/A'
+    secondary_structure = supplementary_data.get('secondary_structure', 'Unknown') if supplementary_data else 'Unknown'
+    
+    # Create visualization code
+    js_code = f"""
+    <style>
+        .structure-container {{
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }}
+        .info-panel {{
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 14px;
+            z-index: 100;
+            max-width: 200px;
+        }}
+        .controls-panel {{
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 100;
+        }}
+        .controls-panel button {{
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 5px 10px;
+            margin-right: 5px;
+            font-size: 12px;
+            cursor: pointer;
+        }}
+        .legend-panel {{
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 8px;
+            font-size: 12px;
+            z-index: 100;
+        }}
+        .legend-item {{
+            display: flex;
+            align-items: center;
+            margin-bottom: 3px;
+        }}
+        .legend-color {{
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }}
+    </style>
+    
+    <div class="structure-container" id="structure-container">
+        <div class="info-panel">
+            <h6 class="mb-2">Site: {site}</h6>
+            <p class="mb-1"><strong>pLDDT:</strong> {site_plddt}</p>
+            <p class="mb-1"><strong>Surface Access:</strong> {surface_access}%</p>
+            <p class="mb-1"><strong>Nearby Residues:</strong> {nearby_count}</p>
+            <p class="mb-1"><strong>2° Structure:</strong> {secondary_structure}</p>
+        </div>
+        <div class="controls-panel">
+            <button id="reset-view-btn">Reset View</button>
+            <button id="toggle-view-btn">Full Protein</button>
+            <button id="toggle-color-btn">Color by Type</button>
+        </div>
+        <div class="legend-panel">
+            <div class="legend-item"><div class="legend-color" style="background-color:#FF4500;"></div> Target Site</div>
+            <div class="legend-item"><div class="legend-color" style="background-color:#87CEFA;"></div> Polar</div>
+            <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;"></div> Non-polar</div>
+            <div class="legend-item"><div class="legend-color" style="background-color:#FF6347;"></div> Acidic</div>
+            <div class="legend-item"><div class="legend-color" style="background-color:#98FB98;"></div> Basic</div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/gh/arose/ngl@v2.0.0-dev.37/dist/ngl.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {{
+            var stage = new NGL.Stage('structure-container', {{backgroundColor: "white"}});
+            
+            window.addEventListener('resize', function() {{
+                stage.handleResize();
+            }});
+            
+            // Define residue type groupings
+            const aminoAcidGroups = {{
+                polar: ["SER", "THR", "TYR", "CYS", "ASN", "GLN"],
+                nonpolar: ["ALA", "VAL", "ILE", "LEU", "MET", "PHE", "TRP", "PRO", "GLY"],
+                acidic: ["ASP", "GLU"],
+                basic: ["LYS", "ARG", "HIS"]
+            }};
+            
+            // Define colors for each group
+            const groupColors = {{
+                polar: [135/255, 206/255, 250/255],     // Light blue
+                nonpolar: [255/255, 215/255, 0/255],    // Gold
+                acidic: [255/255, 99/255, 71/255],      // Tomato
+                basic: [152/255, 251/255, 152/255]      // Pale green
+            }};
+            
+            // Function to determine AA group
+            function getAminoAcidGroup(resname) {{
+                for (const [group, residues] of Object.entries(aminoAcidGroups)) {{
+                    if (residues.includes(resname)) {{
+                        return group;
+                    }}
+                }}
+                return "other";
+            }}
+            
+            // Color function based on amino acid type
+            function colorByType(atom) {{
+                // Special color for the target site
+                if (atom.resno === {site_number}) {{
+                    return [1.0, 0.27, 0.0];  // #FF4500 orange-red
+                }}
+                
+                // Color by amino acid type
+                const group = getAminoAcidGroup(atom.resname);
+                if (group in groupColors) {{
+                    return groupColors[group];
+                }}
+                
+                // Default grey for others
+                return [0.5, 0.5, 0.5];
+            }}
+            
+            // Load structure
+            var pdbBlob = new Blob([atob('{pdb_base64}')], {{type: 'text/plain'}});
+            
+            stage.loadFile(pdbBlob, {{ext: 'pdb'}}).then(function(component) {{
+                // Get target selection
+                const siteSelection = "{site_number} and .{site_type}";
+                const environmentSelection = siteSelection + " or (" + siteSelection + " around 5)";
+                
+                // State variables
+                let isFullView = false;
+                let colorMode = "element";  // "element" or "type"
+                
+                // Reset button
+                document.getElementById('reset-view-btn').addEventListener('click', function() {{
+                    updateRepresentations();
+                }});
+                
+                // Toggle view button
+                document.getElementById('toggle-view-btn').addEventListener('click', function() {{
+                    isFullView = !isFullView;
+                    this.textContent = isFullView ? 'Site Focus' : 'Full Protein';
+                    updateRepresentations();
+                }});
+                
+                // Toggle color button
+                document.getElementById('toggle-color-btn').addEventListener('click', function() {{
+                    colorMode = colorMode === "element" ? "type" : "element";
+                    this.textContent = colorMode === "element" ? 'Color by Type' : 'Color by Element';
+                    updateRepresentations();
+                }});
+                
+                // Update all representations based on current state
+                function updateRepresentations() {{
+                    // Remove all existing representations
+                    component.removeAllRepresentations();
+                    
+                    // Add cartoon representation for entire protein
+                    component.addRepresentation("cartoon", {{
+                        color: colorMode === "type" ? colorByType : "chainid",
+                        opacity: 0.7,
+                        smoothSheet: true
+                    }});
+                    
+                    // Add ball and stick for target residue
+                    component.addRepresentation("ball+stick", {{
+                        sele: siteSelection,
+                        color: colorMode === "type" ? colorByType : "element",
+                        aspectRatio: 1.5,
+                        scale: 1.2
+                    }});
+                    
+                    // Add licorice for environment (if not full view)
+                    if (!isFullView) {{
+                        component.addRepresentation("licorice", {{
+                            sele: environmentSelection + " and not " + siteSelection,
+                            color: colorMode === "type" ? colorByType : "element",
+                            opacity: 0.8,
+                            scale: 0.8
+                        }});
+                        
+                        // Add labels
+                        component.addRepresentation("label", {{
+                            sele: environmentSelection,
+                            color: "#333333",
+                            labelType: "format",
+                            labelFormat: "{{resname}}{{resno}}",
+                            labelGrouping: "residue",
+                            attachment: "middle-center",
+                            showBackground: true,
+                            backgroundColor: "white",
+                            backgroundOpacity: 0.5
+                        }});
+                    }}
+                    
+                    // Set view
+                    if (isFullView) {{
+                        component.autoView();
+                    }} else {{
+                        component.autoView(environmentSelection, 2000);
+                    }}
+                }}
+                
+                // Initial setup
+                updateRepresentations();
+            }});
+        }});
+    </script>
+    """
+    
+    return js_code
+
+
+def create_comparative_motif_visualization(primary_site, matches):
+    """
+    Create a comparative visualization of sequence motifs for the primary site
+    and its structural matches.
+    
+    Args:
+        primary_site: Dictionary with primary site information
+        matches: List of dictionaries with match information
+        
+    Returns:
+        HTML code for the visualization
+    """
+    if not primary_site or 'motif' not in primary_site:
+        return "<div class='alert alert-warning'>Motif data not available for primary site</div>"
+    
+    # Get primary site motif
+    primary_motif = primary_site.get('motif', '')
+    primary_site_name = primary_site.get('site', 'Unknown')
+    
+    # Filter matches that have motif data
+    valid_matches = [m for m in matches if 'motif' in m and m['motif']]
+    
+    if not valid_matches:
+        return "<div class='alert alert-warning'>No motif data available for matches</div>"
+    
+    # Sort by RMSD (closest matches first)
+    sorted_matches = sorted(valid_matches, key=lambda x: x.get('rmsd', float('inf')))
+    
+    # Take top N matches
+    top_matches = sorted_matches[:10]  # Limit to 10 for visualization
+    
+    # Create HTML
+    html = """
+    <style>
+        .motif-comparison {
+            font-family: monospace;
+            margin-bottom: 20px;
+        }
+        .motif-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .motif-label {
+            width: 100px;
+            font-weight: bold;
+            text-align: right;
+            padding-right: 10px;
+        }
+        .motif-sequence {
+            display: flex;
+        }
+        .motif-aa {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 1px;
+            border-radius: 3px;
+        }
+        .motif-aa.highlighted {
+            background-color: #ff5722;
+            color: white;
+            font-weight: bold;
+        }
+        .motif-aa.polar {
+            background-color: #bbdefb;
+        }
+        .motif-aa.nonpolar {
+            background-color: #ffecb3;
+        }
+        .motif-aa.acidic {
+            background-color: #ffcdd2;
+        }
+        .motif-aa.basic {
+            background-color: #c8e6c9;
+        }
+        .motif-aa.special {
+            background-color: #e1bee7;
+        }
+        .motif-position {
+            display: flex;
+            padding-left: 100px;
+            margin-bottom: 10px;
+        }
+        .motif-position span {
+            width: 24px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+        }
+        .match-info {
+            margin-left: 10px;
+            font-size: 12px;
+            color: #333;
+        }
+    </style>
+    
+    <div class="motif-comparison">
+        <h5 class="mb-3">Motif Comparison</h5>
+        
+        <!-- Position markers -->
+        <div class="motif-position">
+    """
+    
+    # Add position markers
+    center_pos = len(primary_motif) // 2
+    for i in range(len(primary_motif)):
+        position = i - center_pos
+        html += f'<span>{position}</span>'
+    
+    html += """
+        </div>
+        
+        <!-- Primary site motif -->
+        <div class="motif-row">
+            <div class="motif-label">{}</div>
+            <div class="motif-sequence">
+    """.format(primary_site_name)
+    
+    # Add primary motif
+    center_index = len(primary_motif) // 2
+    for i, aa in enumerate(primary_motif):
+        aa_class = get_aa_class(aa)
+        highlight = "highlighted" if i == center_index else aa_class
+        html += f'<div class="motif-aa {highlight}">{aa}</div>'
+    
+    html += """
+            </div>
+        </div>
+    """
+    
+    # Add match motifs
+    for match in top_matches:
+        motif = match.get('motif', '')
+        target_site = match.get('target_site', 'Unknown')
+        target_uniprot = match.get('target_uniprot', 'Unknown')
+        rmsd = match.get('rmsd', 0.0)
+        
+        html += f"""
+        <div class="motif-row">
+            <div class="motif-label">{target_site}</div>
+            <div class="motif-sequence">
+        """
+        
+        # Add match motif
+        center_index = len(motif) // 2
+        for i, aa in enumerate(motif):
+            aa_class = get_aa_class(aa)
+            highlight = "highlighted" if i == center_index else aa_class
+            html += f'<div class="motif-aa {highlight}">{aa}</div>'
+        
+        html += f"""
+            </div>
+            <div class="match-info">
+                RMSD: {rmsd:.2f}Å | <a href="/site/{target_uniprot}/{target_site}" class="text-decoration-none">View site</a>
+            </div>
+        </div>
+        """
+    
+    html += """
+    </div>
+    """
+    
+    return html
+
+
+def get_aa_class(aa):
+    """Helper function to classify amino acids by type."""
+    if aa in 'STYCNQ':
+        return 'polar'
+    elif aa in 'AVILMFWPG':
+        return 'nonpolar'
+    elif aa in 'DE':
+        return 'acidic'
+    elif aa in 'KRH':
+        return 'basic'
+    else:
+        return 'special'
+
+
+def analyze_residue_distributions(structural_matches):
+    """
+    Analyze the distribution of residues across structural matches to identify
+    potential conservation patterns.
+    
+    Args:
+        structural_matches: List of match dictionaries
+        
+    Returns:
+        Dictionary with analysis results
+    """
+    if not structural_matches:
+        return None
+        
+    # Get motifs from matches
+    motifs = []
+    for match in structural_matches:
+        if 'motif' in match and match['motif']:
+            # We assume the phosphosite is in the middle of the motif
+            motifs.append(match['motif'])
+    
+    if not motifs:
+        return None
+        
+    # Determine the motif length (use longest motif)
+    motif_length = max(len(m) for m in motifs)
+    
+    # Calculate the center position (where the phosphosite is)
+    center_pos = motif_length // 2
+    
+    # Count amino acids at each position
+    position_counts = []
+    for i in range(motif_length):
+        counts = {}
+        for motif in motifs:
+            if i < len(motif):
+                aa = motif[i]
+                counts[aa] = counts.get(aa, 0) + 1
+        position_counts.append(counts)
+    
+    # Calculate frequencies and identify consensus
+    frequencies = []
+    consensus = []
+    
+    for i, counts in enumerate(position_counts):
+        total = sum(counts.values())
+        freq = {aa: count/total for aa, count in counts.items()}
+        frequencies.append(freq)
+        
+        # Find most common AA
+        if counts:
+            max_aa = max(counts.items(), key=lambda x: x[1])
+            consensus.append(max_aa[0])
+        else:
+            consensus.append('-')
+    
+    # Generate relative position labels
+    positions = [i - center_pos for i in range(motif_length)]
+    
+    # Identify conserved positions (>50% same AA)
+    conserved = []
+    for i, counts in enumerate(position_counts):
+        total = sum(counts.values())
+        max_count = max(counts.values()) if counts else 0
+        
+        if max_count / total >= 0.5:
+            conserved.append({
+                'position': positions[i],
+                'amino_acid': consensus[i],
+                'frequency': max_count / total * 100
+            })
+    
+    # Group amino acids by type
+    aa_groups = {
+        'polar': 'STYCNQ',
+        'nonpolar': 'AVILMFWPG',
+        'acidic': 'DE',
+        'basic': 'KRH'
+    }
+    
+    # Count by group at each position
+    group_counts = []
+    for i in range(motif_length):
+        counts = {group: 0 for group in aa_groups}
+        for motif in motifs:
+            if i < len(motif):
+                aa = motif[i]
+                for group, aas in aa_groups.items():
+                    if aa in aas:
+                        counts[group] += 1
+                        break
+        group_counts.append(counts)
+    
+    # Generate consensus motif
+    consensus_str = ''.join(consensus)
+    
+    return {
+        'motif_count': len(motifs),
+        'positions': positions,
+        'consensus': consensus_str,
+        'frequencies': frequencies,
+        'position_counts': position_counts,
+        'group_counts': group_counts,
+        'conserved': conserved
+    }
+    
+load_phosphosite_supp_data()
+
+
 
 if __name__ == "__main__":
     # Example usage when run as a script

@@ -1,0 +1,478 @@
+2025-03-21 22:04:46,404 - INFO - Starting creation of phosphosite supplementary data from Combined_Kinome_10A_Master_Filtered_2.feather
+2025-03-21 22:04:46,405 - INFO - Output will be saved to PhosphositeSuppData.feather
+2025-03-21 22:04:46,415 - ERROR - Error loading input file: [Errno 2] No such file or directory: 'Combined_Kinome_10A_Master_Filtered_2.feather'
+2025-03-21 22:04:46,415 - INFO - Total execution time: 0.01 seconds
+2025-03-21 22:05:53,486 - INFO - Starting creation of phosphosite supplementary data from C:/Users/mz30/protein_explorer/Combined_Kinome_10A_Master_Filtered_2.feather
+2025-03-21 22:05:53,487 - INFO - Output will be saved to C:/Users/mz30/protein_explorer/PhosphositeSuppData.feather
+2025-03-21 22:06:09,383 - INFO - Loaded 15722854 rows from C:/Users/mz30/protein_explorer/Combined_Kinome_10A_Master_Filtered_2.feather
+2025-03-21 22:06:11,971 - INFO - Found 82002 unique phosphosites to process
+2025-03-21 22:06:11,977 - INFO - Processing batch 1/83 (1000 sites)
+2025-03-21 22:09:58,717 - INFO - Starting creation of phosphosite supplementary data from C:/Users/mz30/protein_explorer/Combined_Kinome_10A_Master_Filtered_2.feather
+2025-03-21 22:09:58,717 - INFO - Output will be saved to C:/Users/mz30/protein_explorer/PhosphositeSuppData.feather
+2025-03-21 22:10:11,701 - INFO - Loaded 15722854 rows from C:/Users/mz30/protein_explorer/Combined_Kinome_10A_Master_Filtered_2.feather
+2025-03-21 22:10:14,009 - INFO - Found 82002 unique phosphosites to process
+2025-03-21 22:10:14,148 - INFO - Grouped into 10313 unique proteins
+2025-03-21 22:10:14,153 - INFO - Processing batch 1/207 (50 proteins)
+2025-03-21 22:10:54,003 - INFO - Saved intermediate batch 1 with 913 processed sites to phosphosite_data_temp\batch_0.feather
+2025-03-21 22:10:54,004 - INFO - Processing batch 2/207 (50 proteins)
+2025-03-21 22:11:33,531 - INFO - Saved intermediate batch 2 with 1147 processed sites to phosphosite_data_temp\batch_50.feather
+2025-03-21 22:11:33,531 - INFO - Processing batch 3/207 (50 proteins)
+2025-03-21 22:12:16,669 - INFO - Saved intermediate batch 3 with 1191 processed sites to phosphosite_data_temp\batch_100.feather
+2025-03-21 22:12:16,670 - INFO - Processing batch 4/207 (50 proteins)
+2025-03-21 22:12:45,971 - WARNING - Residue number 588 out of range for Q9P2C4
+2025-03-21 22:12:45,971 - WARNING - Residue number 580 out of range for Q9P2C4
+2025-03-21 22:12:45,972 - WARNING - Residue number 566 out of range for Q9P2C4
+2025-03-21 22:12:58,442 - INFO - Saved intermediate batch 4 with 1181 processed sites to phosphosite_data_temp\batch_150.feather
+2025-03-21 22:12:58,443 - INFO - Processing batch 5/207 (50 proteins)
+2025-03-21 22:13:39,973 - INFO - Saved intermediate batch 5 with 916 processed sites to phosphosite_data_temp\batch_200.feather
+2025-03-21 22:13:39,974 - INFO - Processing batch 6/207 (50 proteins)
+2025-03-21 22:14:19,046 - INFO - Saved intermediate batch 6 with 1348 processed sites to phosphosite_data_temp\batch_250.feather
+2025-03-21 22:14:19,046 - INFO - Processing batch 7/207 (50 proteins)
+2025-03-21 22:15:01,816 - INFO - Saved intermediate batch 7 with 1158 processed sites to phosphosite_data_temp\batch_300.feather
+2025-03-21 22:15:01,817 - INFO - Processing batch 8/207 (50 proteins)
+2025-03-21 22:15:42,420 - INFO - Saved intermediate batch 8 with 977 processed sites to phosphosite_data_temp\batch_350.feather
+2025-03-21 22:15:42,421 - INFO - Processing batch 9/207 (50 proteins)
+2025-03-21 22:16:21,265 - INFO - Saved intermediate batch 9 with 802 processed sites to phosphosite_data_temp\batch_400.feather
+2025-03-21 22:16:21,266 - INFO - Processing batch 10/207 (50 proteins)
+2025-03-21 22:17:03,620 - INFO - Saved intermediate batch 10 with 1144 processed sites to phosphosite_data_temp\batch_450.feather
+2025-03-21 22:17:03,621 - INFO - Processing batch 11/207 (50 proteins)
+2025-03-21 22:17:44,330 - INFO - Saved intermediate batch 11 with 1225 processed sites to phosphosite_data_temp\batch_500.feather
+2025-03-21 22:17:44,331 - INFO - Processing batch 12/207 (50 proteins)
+2025-03-21 22:18:27,350 - INFO - Saved intermediate batch 12 with 1097 processed sites to phosphosite_data_temp\batch_550.feather
+2025-03-21 22:18:27,351 - INFO - Processing batch 13/207 (50 proteins)
+2025-03-21 22:19:08,326 - INFO - Saved intermediate batch 13 with 832 processed sites to phosphosite_data_temp\batch_600.feather
+2025-03-21 22:19:08,326 - INFO - Processing batch 14/207 (50 proteins)
+2025-03-21 22:19:52,045 - INFO - Saved intermediate batch 14 with 933 processed sites to phosphosite_data_temp\batch_650.feather
+2025-03-21 22:19:52,046 - INFO - Processing batch 15/207 (50 proteins)
+2025-03-21 22:20:32,524 - INFO - Saved intermediate batch 15 with 656 processed sites to phosphosite_data_temp\batch_700.feather
+2025-03-21 22:20:32,525 - INFO - Processing batch 16/207 (50 proteins)
+2025-03-21 22:21:12,679 - INFO - Saved intermediate batch 16 with 1029 processed sites to phosphosite_data_temp\batch_750.feather
+2025-03-21 22:21:12,680 - INFO - Processing batch 17/207 (50 proteins)
+2025-03-21 22:21:54,801 - INFO - Saved intermediate batch 17 with 1102 processed sites to phosphosite_data_temp\batch_800.feather
+2025-03-21 22:21:54,802 - INFO - Processing batch 18/207 (50 proteins)
+2025-03-21 22:22:37,742 - INFO - Saved intermediate batch 18 with 894 processed sites to phosphosite_data_temp\batch_850.feather
+2025-03-21 22:22:37,743 - INFO - Processing batch 19/207 (50 proteins)
+2025-03-21 22:23:19,947 - INFO - Saved intermediate batch 19 with 1088 processed sites to phosphosite_data_temp\batch_900.feather
+2025-03-21 22:23:19,948 - INFO - Processing batch 20/207 (50 proteins)
+2025-03-21 22:24:02,309 - INFO - Saved intermediate batch 20 with 896 processed sites to phosphosite_data_temp\batch_950.feather
+2025-03-21 22:24:02,310 - INFO - Processing batch 21/207 (50 proteins)
+2025-03-21 22:24:40,846 - INFO - Saved intermediate batch 21 with 772 processed sites to phosphosite_data_temp\batch_1000.feather
+2025-03-21 22:24:40,847 - INFO - Processing batch 22/207 (50 proteins)
+2025-03-21 22:25:22,725 - INFO - Saved intermediate batch 22 with 859 processed sites to phosphosite_data_temp\batch_1050.feather
+2025-03-21 22:25:22,726 - INFO - Processing batch 23/207 (50 proteins)
+2025-03-21 22:26:05,902 - INFO - Saved intermediate batch 23 with 937 processed sites to phosphosite_data_temp\batch_1100.feather
+2025-03-21 22:26:05,902 - INFO - Processing batch 24/207 (50 proteins)
+2025-03-21 22:26:49,022 - INFO - Saved intermediate batch 24 with 783 processed sites to phosphosite_data_temp\batch_1150.feather
+2025-03-21 22:26:49,022 - INFO - Processing batch 25/207 (50 proteins)
+2025-03-21 22:27:32,158 - INFO - Saved intermediate batch 25 with 983 processed sites to phosphosite_data_temp\batch_1200.feather
+2025-03-21 22:27:32,158 - INFO - Processing batch 26/207 (50 proteins)
+2025-03-21 22:27:59,207 - WARNING - Residue number 350 out of range for Q9HBW0
+2025-03-21 22:28:11,396 - INFO - Saved intermediate batch 26 with 785 processed sites to phosphosite_data_temp\batch_1250.feather
+2025-03-21 22:28:11,397 - INFO - Processing batch 27/207 (50 proteins)
+2025-03-21 22:28:51,845 - INFO - Saved intermediate batch 27 with 666 processed sites to phosphosite_data_temp\batch_1300.feather
+2025-03-21 22:28:51,846 - INFO - Processing batch 28/207 (50 proteins)
+2025-03-21 22:29:31,618 - INFO - Saved intermediate batch 28 with 672 processed sites to phosphosite_data_temp\batch_1350.feather
+2025-03-21 22:29:31,619 - INFO - Processing batch 29/207 (50 proteins)
+2025-03-21 22:30:11,449 - INFO - Saved intermediate batch 29 with 815 processed sites to phosphosite_data_temp\batch_1400.feather
+2025-03-21 22:30:11,450 - INFO - Processing batch 30/207 (50 proteins)
+2025-03-21 22:30:51,396 - INFO - Saved intermediate batch 30 with 643 processed sites to phosphosite_data_temp\batch_1450.feather
+2025-03-21 22:30:51,397 - INFO - Processing batch 31/207 (50 proteins)
+2025-03-21 22:31:29,883 - INFO - Saved intermediate batch 31 with 677 processed sites to phosphosite_data_temp\batch_1500.feather
+2025-03-21 22:31:29,884 - INFO - Processing batch 32/207 (50 proteins)
+2025-03-21 22:31:42,917 - WARNING - Failed to retrieve sequence for A0A0B4J2F2
+2025-03-21 22:31:42,918 - WARNING - Missing structure or sequence for A0A0B4J2F2
+2025-03-21 22:32:12,015 - INFO - Saved intermediate batch 32 with 912 processed sites to phosphosite_data_temp\batch_1550.feather
+2025-03-21 22:32:12,015 - INFO - Processing batch 33/207 (50 proteins)
+2025-03-21 22:32:53,367 - INFO - Saved intermediate batch 33 with 1060 processed sites to phosphosite_data_temp\batch_1600.feather
+2025-03-21 22:32:53,368 - INFO - Processing batch 34/207 (50 proteins)
+2025-03-21 22:33:34,412 - INFO - Saved intermediate batch 34 with 758 processed sites to phosphosite_data_temp\batch_1650.feather
+2025-03-21 22:33:34,413 - INFO - Processing batch 35/207 (50 proteins)
+2025-03-21 22:34:13,150 - INFO - Saved intermediate batch 35 with 716 processed sites to phosphosite_data_temp\batch_1700.feather
+2025-03-21 22:34:13,150 - INFO - Processing batch 36/207 (50 proteins)
+2025-03-21 22:34:53,080 - INFO - Saved intermediate batch 36 with 742 processed sites to phosphosite_data_temp\batch_1750.feather
+2025-03-21 22:34:53,081 - INFO - Processing batch 37/207 (50 proteins)
+2025-03-21 22:35:34,290 - INFO - Saved intermediate batch 37 with 789 processed sites to phosphosite_data_temp\batch_1800.feather
+2025-03-21 22:35:34,291 - INFO - Processing batch 38/207 (50 proteins)
+2025-03-21 22:36:13,987 - INFO - Saved intermediate batch 38 with 691 processed sites to phosphosite_data_temp\batch_1850.feather
+2025-03-21 22:36:13,988 - INFO - Processing batch 39/207 (50 proteins)
+2025-03-21 22:36:54,039 - INFO - Saved intermediate batch 39 with 787 processed sites to phosphosite_data_temp\batch_1900.feather
+2025-03-21 22:36:54,039 - INFO - Processing batch 40/207 (50 proteins)
+2025-03-21 22:37:22,427 - WARNING - Residue number 1865 out of range for Q96L96
+2025-03-21 22:37:22,429 - WARNING - Residue number 1855 out of range for Q96L96
+2025-03-21 22:37:36,029 - INFO - Saved intermediate batch 40 with 604 processed sites to phosphosite_data_temp\batch_1950.feather
+2025-03-21 22:37:36,029 - INFO - Processing batch 41/207 (50 proteins)
+2025-03-21 22:38:19,496 - INFO - Saved intermediate batch 41 with 660 processed sites to phosphosite_data_temp\batch_2000.feather
+2025-03-21 22:38:19,497 - INFO - Processing batch 42/207 (50 proteins)
+2025-03-21 22:38:58,489 - INFO - Saved intermediate batch 42 with 714 processed sites to phosphosite_data_temp\batch_2050.feather
+2025-03-21 22:38:58,489 - INFO - Processing batch 43/207 (50 proteins)
+2025-03-21 22:39:39,259 - INFO - Saved intermediate batch 43 with 677 processed sites to phosphosite_data_temp\batch_2100.feather
+2025-03-21 22:39:39,260 - INFO - Processing batch 44/207 (50 proteins)
+2025-03-21 22:40:19,564 - INFO - Saved intermediate batch 44 with 672 processed sites to phosphosite_data_temp\batch_2150.feather
+2025-03-21 22:40:19,564 - INFO - Processing batch 45/207 (50 proteins)
+2025-03-21 22:40:59,141 - INFO - Saved intermediate batch 45 with 565 processed sites to phosphosite_data_temp\batch_2200.feather
+2025-03-21 22:40:59,141 - INFO - Processing batch 46/207 (50 proteins)
+2025-03-21 22:41:38,742 - INFO - Saved intermediate batch 46 with 670 processed sites to phosphosite_data_temp\batch_2250.feather
+2025-03-21 22:41:38,743 - INFO - Processing batch 47/207 (50 proteins)
+2025-03-21 22:42:17,194 - INFO - Saved intermediate batch 47 with 710 processed sites to phosphosite_data_temp\batch_2300.feather
+2025-03-21 22:42:17,195 - INFO - Processing batch 48/207 (50 proteins)
+2025-03-21 22:42:56,210 - INFO - Saved intermediate batch 48 with 671 processed sites to phosphosite_data_temp\batch_2350.feather
+2025-03-21 22:42:56,211 - INFO - Processing batch 49/207 (50 proteins)
+2025-03-21 22:43:35,839 - INFO - Saved intermediate batch 49 with 738 processed sites to phosphosite_data_temp\batch_2400.feather
+2025-03-21 22:43:35,839 - INFO - Processing batch 50/207 (50 proteins)
+2025-03-21 22:43:39,544 - WARNING - Failed to retrieve sequence for P0DN24
+2025-03-21 22:43:39,545 - WARNING - Missing structure or sequence for P0DN24
+2025-03-21 22:44:15,824 - INFO - Saved intermediate batch 50 with 590 processed sites to phosphosite_data_temp\batch_2450.feather
+2025-03-21 22:44:15,825 - INFO - Processing batch 51/207 (50 proteins)
+2025-03-21 22:44:17,233 - WARNING - Failed to retrieve sequence for A0A1B0GUL7
+2025-03-21 22:44:17,234 - WARNING - Missing structure or sequence for A0A1B0GUL7
+2025-03-21 22:44:52,824 - INFO - Saved intermediate batch 51 with 480 processed sites to phosphosite_data_temp\batch_2500.feather
+2025-03-21 22:44:52,825 - INFO - Processing batch 52/207 (50 proteins)
+2025-03-21 22:45:32,133 - INFO - Saved intermediate batch 52 with 498 processed sites to phosphosite_data_temp\batch_2550.feather
+2025-03-21 22:45:32,135 - INFO - Processing batch 53/207 (50 proteins)
+2025-03-21 22:46:11,353 - INFO - Saved intermediate batch 53 with 657 processed sites to phosphosite_data_temp\batch_2600.feather
+2025-03-21 22:46:11,354 - INFO - Processing batch 54/207 (50 proteins)
+2025-03-21 22:46:54,089 - INFO - Saved intermediate batch 54 with 577 processed sites to phosphosite_data_temp\batch_2650.feather
+2025-03-21 22:46:54,089 - INFO - Processing batch 55/207 (50 proteins)
+2025-03-21 22:47:34,201 - INFO - Saved intermediate batch 55 with 530 processed sites to phosphosite_data_temp\batch_2700.feather
+2025-03-21 22:47:34,202 - INFO - Processing batch 56/207 (50 proteins)
+2025-03-21 22:48:13,845 - INFO - Saved intermediate batch 56 with 445 processed sites to phosphosite_data_temp\batch_2750.feather
+2025-03-21 22:48:13,861 - INFO - Processing batch 57/207 (50 proteins)
+2025-03-21 22:48:20,426 - WARNING - Residue number 213 out of range for Q12983
+2025-03-21 22:48:20,428 - WARNING - Residue number 256 out of range for Q12983
+2025-03-21 22:48:20,428 - WARNING - Residue number 209 out of range for Q12983
+2025-03-21 22:48:20,428 - WARNING - Residue number 255 out of range for Q12983
+2025-03-21 22:48:20,429 - WARNING - Residue number 257 out of range for Q12983
+2025-03-21 22:48:20,430 - WARNING - Residue number 258 out of range for Q12983
+2025-03-21 22:48:20,430 - WARNING - Residue number 214 out of range for Q12983
+2025-03-21 22:48:20,432 - WARNING - Residue number 254 out of range for Q12983
+2025-03-21 22:48:20,432 - WARNING - Residue number 205 out of range for Q12983
+2025-03-21 22:48:20,432 - WARNING - Residue number 253 out of range for Q12983
+2025-03-21 22:48:54,961 - INFO - Saved intermediate batch 57 with 588 processed sites to phosphosite_data_temp\batch_2800.feather
+2025-03-21 22:48:54,961 - INFO - Processing batch 58/207 (50 proteins)
+2025-03-21 22:49:35,494 - INFO - Saved intermediate batch 58 with 479 processed sites to phosphosite_data_temp\batch_2850.feather
+2025-03-21 22:49:35,495 - INFO - Processing batch 59/207 (50 proteins)
+2025-03-21 22:50:14,961 - INFO - Saved intermediate batch 59 with 488 processed sites to phosphosite_data_temp\batch_2900.feather
+2025-03-21 22:50:14,962 - INFO - Processing batch 60/207 (50 proteins)
+2025-03-21 22:50:54,897 - INFO - Saved intermediate batch 60 with 533 processed sites to phosphosite_data_temp\batch_2950.feather
+2025-03-21 22:50:54,898 - INFO - Processing batch 61/207 (50 proteins)
+2025-03-21 22:51:35,057 - INFO - Saved intermediate batch 61 with 479 processed sites to phosphosite_data_temp\batch_3000.feather
+2025-03-21 22:51:35,060 - INFO - Processing batch 62/207 (50 proteins)
+2025-03-21 22:52:14,353 - INFO - Saved intermediate batch 62 with 435 processed sites to phosphosite_data_temp\batch_3050.feather
+2025-03-21 22:52:14,354 - INFO - Processing batch 63/207 (50 proteins)
+2025-03-21 22:52:22,924 - WARNING - Residue number 241 out of range for Q66PJ3
+2025-03-21 22:52:22,925 - WARNING - Residue number 343 out of range for Q66PJ3
+2025-03-21 22:52:22,926 - WARNING - Residue number 239 out of range for Q66PJ3
+2025-03-21 22:52:22,926 - WARNING - Residue number 325 out of range for Q66PJ3
+2025-03-21 22:52:22,926 - WARNING - Residue number 332 out of range for Q66PJ3
+2025-03-21 22:52:22,927 - WARNING - Residue number 366 out of range for Q66PJ3
+2025-03-21 22:52:54,526 - INFO - Saved intermediate batch 63 with 592 processed sites to phosphosite_data_temp\batch_3100.feather
+2025-03-21 22:52:54,526 - INFO - Processing batch 64/207 (50 proteins)
+2025-03-21 22:53:35,107 - INFO - Saved intermediate batch 64 with 575 processed sites to phosphosite_data_temp\batch_3150.feather
+2025-03-21 22:53:35,109 - INFO - Processing batch 65/207 (50 proteins)
+2025-03-21 22:54:13,393 - INFO - Saved intermediate batch 65 with 525 processed sites to phosphosite_data_temp\batch_3200.feather
+2025-03-21 22:54:13,394 - INFO - Processing batch 66/207 (50 proteins)
+2025-03-21 22:54:53,319 - INFO - Saved intermediate batch 66 with 536 processed sites to phosphosite_data_temp\batch_3250.feather
+2025-03-21 22:54:53,320 - INFO - Processing batch 67/207 (50 proteins)
+2025-03-21 22:55:31,252 - INFO - Saved intermediate batch 67 with 518 processed sites to phosphosite_data_temp\batch_3300.feather
+2025-03-21 22:55:31,253 - INFO - Processing batch 68/207 (50 proteins)
+2025-03-21 22:56:09,650 - INFO - Saved intermediate batch 68 with 453 processed sites to phosphosite_data_temp\batch_3350.feather
+2025-03-21 22:56:09,651 - INFO - Processing batch 69/207 (50 proteins)
+2025-03-21 22:56:13,696 - WARNING - Residue number 875 out of range for Q01433
+2025-03-21 22:56:48,088 - INFO - Saved intermediate batch 69 with 479 processed sites to phosphosite_data_temp\batch_3400.feather
+2025-03-21 22:56:48,089 - INFO - Processing batch 70/207 (50 proteins)
+2025-03-21 22:57:37,123 - INFO - Saved intermediate batch 70 with 517 processed sites to phosphosite_data_temp\batch_3450.feather
+2025-03-21 22:57:37,124 - INFO - Processing batch 71/207 (50 proteins)
+2025-03-21 22:58:17,433 - INFO - Saved intermediate batch 71 with 509 processed sites to phosphosite_data_temp\batch_3500.feather
+2025-03-21 22:58:17,434 - INFO - Processing batch 72/207 (50 proteins)
+2025-03-21 22:58:49,445 - WARNING - Failed to retrieve sequence for P0DN79
+2025-03-21 22:58:49,446 - WARNING - Missing structure or sequence for P0DN79
+2025-03-21 22:58:56,394 - INFO - Saved intermediate batch 72 with 472 processed sites to phosphosite_data_temp\batch_3550.feather
+2025-03-21 22:58:56,395 - INFO - Processing batch 73/207 (50 proteins)
+2025-03-21 22:59:37,477 - INFO - Saved intermediate batch 73 with 557 processed sites to phosphosite_data_temp\batch_3600.feather
+2025-03-21 22:59:37,477 - INFO - Processing batch 74/207 (50 proteins)
+2025-03-21 23:00:16,963 - INFO - Saved intermediate batch 74 with 416 processed sites to phosphosite_data_temp\batch_3650.feather
+2025-03-21 23:00:16,963 - INFO - Processing batch 75/207 (50 proteins)
+2025-03-21 23:00:55,921 - INFO - Saved intermediate batch 75 with 454 processed sites to phosphosite_data_temp\batch_3700.feather
+2025-03-21 23:00:55,921 - INFO - Processing batch 76/207 (50 proteins)
+2025-03-21 23:01:34,690 - INFO - Saved intermediate batch 76 with 356 processed sites to phosphosite_data_temp\batch_3750.feather
+2025-03-21 23:01:34,691 - INFO - Processing batch 77/207 (50 proteins)
+2025-03-21 23:02:11,307 - INFO - Saved intermediate batch 77 with 469 processed sites to phosphosite_data_temp\batch_3800.feather
+2025-03-21 23:02:11,308 - INFO - Processing batch 78/207 (50 proteins)
+2025-03-21 23:02:48,785 - INFO - Saved intermediate batch 78 with 356 processed sites to phosphosite_data_temp\batch_3850.feather
+2025-03-21 23:02:48,786 - INFO - Processing batch 79/207 (50 proteins)
+2025-03-21 23:03:28,590 - INFO - Saved intermediate batch 79 with 347 processed sites to phosphosite_data_temp\batch_3900.feather
+2025-03-21 23:03:28,590 - INFO - Processing batch 80/207 (50 proteins)
+2025-03-21 23:03:55,778 - WARNING - Residue number 273 out of range for Q9HB09
+2025-03-21 23:04:07,157 - INFO - Saved intermediate batch 80 with 380 processed sites to phosphosite_data_temp\batch_3950.feather
+2025-03-21 23:04:07,158 - INFO - Processing batch 81/207 (50 proteins)
+2025-03-21 23:04:47,182 - INFO - Saved intermediate batch 81 with 364 processed sites to phosphosite_data_temp\batch_4000.feather
+2025-03-21 23:04:47,183 - INFO - Processing batch 82/207 (50 proteins)
+2025-03-21 23:05:27,587 - INFO - Saved intermediate batch 82 with 375 processed sites to phosphosite_data_temp\batch_4050.feather
+2025-03-21 23:05:27,588 - INFO - Processing batch 83/207 (50 proteins)
+2025-03-21 23:06:07,953 - INFO - Saved intermediate batch 83 with 415 processed sites to phosphosite_data_temp\batch_4100.feather
+2025-03-21 23:06:07,954 - INFO - Processing batch 84/207 (50 proteins)
+2025-03-21 23:06:45,979 - INFO - Saved intermediate batch 84 with 463 processed sites to phosphosite_data_temp\batch_4150.feather
+2025-03-21 23:06:45,979 - INFO - Processing batch 85/207 (50 proteins)
+2025-03-21 23:07:23,405 - INFO - Saved intermediate batch 85 with 437 processed sites to phosphosite_data_temp\batch_4200.feather
+2025-03-21 23:07:23,406 - INFO - Processing batch 86/207 (50 proteins)
+2025-03-21 23:07:34,744 - WARNING - Failed to retrieve sequence for Q6RUI8
+2025-03-21 23:07:34,745 - WARNING - Missing structure or sequence for Q6RUI8
+2025-03-21 23:08:00,053 - INFO - Saved intermediate batch 86 with 379 processed sites to phosphosite_data_temp\batch_4250.feather
+2025-03-21 23:08:00,054 - INFO - Processing batch 87/207 (50 proteins)
+2025-03-21 23:08:38,912 - INFO - Saved intermediate batch 87 with 446 processed sites to phosphosite_data_temp\batch_4300.feather
+2025-03-21 23:08:38,913 - INFO - Processing batch 88/207 (50 proteins)
+2025-03-21 23:09:17,507 - INFO - Saved intermediate batch 88 with 333 processed sites to phosphosite_data_temp\batch_4350.feather
+2025-03-21 23:09:17,508 - INFO - Processing batch 89/207 (50 proteins)
+2025-03-21 23:09:57,669 - INFO - Saved intermediate batch 89 with 398 processed sites to phosphosite_data_temp\batch_4400.feather
+2025-03-21 23:09:57,669 - INFO - Processing batch 90/207 (50 proteins)
+2025-03-21 23:10:36,378 - INFO - Saved intermediate batch 90 with 329 processed sites to phosphosite_data_temp\batch_4450.feather
+2025-03-21 23:10:36,379 - INFO - Processing batch 91/207 (50 proteins)
+2025-03-21 23:11:14,716 - INFO - Saved intermediate batch 91 with 345 processed sites to phosphosite_data_temp\batch_4500.feather
+2025-03-21 23:11:14,717 - INFO - Processing batch 92/207 (50 proteins)
+2025-03-21 23:11:53,875 - INFO - Saved intermediate batch 92 with 397 processed sites to phosphosite_data_temp\batch_4550.feather
+2025-03-21 23:11:53,875 - INFO - Processing batch 93/207 (50 proteins)
+2025-03-21 23:12:35,583 - INFO - Saved intermediate batch 93 with 287 processed sites to phosphosite_data_temp\batch_4600.feather
+2025-03-21 23:12:35,584 - INFO - Processing batch 94/207 (50 proteins)
+2025-03-21 23:13:14,806 - INFO - Saved intermediate batch 94 with 406 processed sites to phosphosite_data_temp\batch_4650.feather
+2025-03-21 23:13:14,807 - INFO - Processing batch 95/207 (50 proteins)
+2025-03-21 23:13:38,578 - WARNING - Residue number 425 out of range for P34998
+2025-03-21 23:13:53,831 - INFO - Saved intermediate batch 95 with 324 processed sites to phosphosite_data_temp\batch_4700.feather
+2025-03-21 23:13:53,831 - INFO - Processing batch 96/207 (50 proteins)
+2025-03-21 23:14:31,863 - INFO - Saved intermediate batch 96 with 330 processed sites to phosphosite_data_temp\batch_4750.feather
+2025-03-21 23:14:31,864 - INFO - Processing batch 97/207 (50 proteins)
+2025-03-21 23:14:56,000 - WARNING - Failed to retrieve sequence for A0A0B4J2E5
+2025-03-21 23:14:56,004 - WARNING - Missing structure or sequence for A0A0B4J2E5
+2025-03-21 23:15:12,135 - INFO - Saved intermediate batch 97 with 295 processed sites to phosphosite_data_temp\batch_4800.feather
+2025-03-21 23:15:12,136 - INFO - Processing batch 98/207 (50 proteins)
+2025-03-21 23:15:52,594 - INFO - Saved intermediate batch 98 with 290 processed sites to phosphosite_data_temp\batch_4850.feather
+2025-03-21 23:15:52,595 - INFO - Processing batch 99/207 (50 proteins)
+2025-03-21 23:16:32,345 - INFO - Saved intermediate batch 99 with 304 processed sites to phosphosite_data_temp\batch_4900.feather
+2025-03-21 23:16:32,346 - INFO - Processing batch 100/207 (50 proteins)
+2025-03-21 23:17:12,370 - INFO - Saved intermediate batch 100 with 307 processed sites to phosphosite_data_temp\batch_4950.feather
+2025-03-21 23:17:12,371 - INFO - Processing batch 101/207 (50 proteins)
+2025-03-21 23:17:38,533 - WARNING - Residue number 637 out of range for P49761
+2025-03-21 23:17:49,623 - INFO - Saved intermediate batch 101 with 324 processed sites to phosphosite_data_temp\batch_5000.feather
+2025-03-21 23:17:49,624 - INFO - Processing batch 102/207 (50 proteins)
+2025-03-21 23:18:28,867 - INFO - Saved intermediate batch 102 with 325 processed sites to phosphosite_data_temp\batch_5050.feather
+2025-03-21 23:18:28,868 - INFO - Processing batch 103/207 (50 proteins)
+2025-03-21 23:19:09,512 - INFO - Saved intermediate batch 103 with 319 processed sites to phosphosite_data_temp\batch_5100.feather
+2025-03-21 23:19:09,513 - INFO - Processing batch 104/207 (50 proteins)
+2025-03-21 23:19:48,962 - INFO - Saved intermediate batch 104 with 308 processed sites to phosphosite_data_temp\batch_5150.feather
+2025-03-21 23:19:48,963 - INFO - Processing batch 105/207 (50 proteins)
+2025-03-21 23:20:29,080 - INFO - Saved intermediate batch 105 with 307 processed sites to phosphosite_data_temp\batch_5200.feather
+2025-03-21 23:20:29,080 - INFO - Processing batch 106/207 (50 proteins)
+2025-03-21 23:21:07,235 - INFO - Saved intermediate batch 106 with 269 processed sites to phosphosite_data_temp\batch_5250.feather
+2025-03-21 23:21:07,235 - INFO - Processing batch 107/207 (50 proteins)
+2025-03-21 23:21:18,437 - WARNING - Failed to retrieve sequence for P0DN76
+2025-03-21 23:21:18,440 - WARNING - Missing structure or sequence for P0DN76
+2025-03-21 23:21:47,287 - INFO - Saved intermediate batch 107 with 319 processed sites to phosphosite_data_temp\batch_5300.feather
+2025-03-21 23:21:47,287 - INFO - Processing batch 108/207 (50 proteins)
+2025-03-21 23:22:28,727 - INFO - Saved intermediate batch 108 with 348 processed sites to phosphosite_data_temp\batch_5350.feather
+2025-03-21 23:22:28,728 - INFO - Processing batch 109/207 (50 proteins)
+2025-03-21 23:23:08,406 - INFO - Saved intermediate batch 109 with 275 processed sites to phosphosite_data_temp\batch_5400.feather
+2025-03-21 23:23:08,407 - INFO - Processing batch 110/207 (50 proteins)
+2025-03-21 23:23:49,278 - INFO - Saved intermediate batch 110 with 361 processed sites to phosphosite_data_temp\batch_5450.feather
+2025-03-21 23:23:49,278 - INFO - Processing batch 111/207 (50 proteins)
+2025-03-21 23:24:27,679 - INFO - Saved intermediate batch 111 with 321 processed sites to phosphosite_data_temp\batch_5500.feather
+2025-03-21 23:24:27,679 - INFO - Processing batch 112/207 (50 proteins)
+2025-03-21 23:25:11,627 - INFO - Saved intermediate batch 112 with 260 processed sites to phosphosite_data_temp\batch_5550.feather
+2025-03-21 23:25:11,628 - INFO - Processing batch 113/207 (50 proteins)
+2025-03-21 23:25:51,068 - INFO - Saved intermediate batch 113 with 268 processed sites to phosphosite_data_temp\batch_5600.feather
+2025-03-21 23:25:51,069 - INFO - Processing batch 114/207 (50 proteins)
+2025-03-21 23:26:30,897 - INFO - Saved intermediate batch 114 with 231 processed sites to phosphosite_data_temp\batch_5650.feather
+2025-03-21 23:26:30,898 - INFO - Processing batch 115/207 (50 proteins)
+2025-03-21 23:27:08,898 - INFO - Saved intermediate batch 115 with 220 processed sites to phosphosite_data_temp\batch_5700.feather
+2025-03-21 23:27:08,898 - INFO - Processing batch 116/207 (50 proteins)
+2025-03-21 23:27:47,997 - INFO - Saved intermediate batch 116 with 287 processed sites to phosphosite_data_temp\batch_5750.feather
+2025-03-21 23:27:47,998 - INFO - Processing batch 117/207 (50 proteins)
+2025-03-21 23:28:26,819 - INFO - Saved intermediate batch 117 with 258 processed sites to phosphosite_data_temp\batch_5800.feather
+2025-03-21 23:28:26,819 - INFO - Processing batch 118/207 (50 proteins)
+2025-03-21 23:29:05,737 - INFO - Saved intermediate batch 118 with 272 processed sites to phosphosite_data_temp\batch_5850.feather
+2025-03-21 23:29:05,738 - INFO - Processing batch 119/207 (50 proteins)
+2025-03-21 23:29:41,593 - INFO - Saved intermediate batch 119 with 223 processed sites to phosphosite_data_temp\batch_5900.feather
+2025-03-21 23:29:41,593 - INFO - Processing batch 120/207 (50 proteins)
+2025-03-21 23:30:21,668 - INFO - Saved intermediate batch 120 with 283 processed sites to phosphosite_data_temp\batch_5950.feather
+2025-03-21 23:30:21,669 - INFO - Processing batch 121/207 (50 proteins)
+2025-03-21 23:31:01,351 - INFO - Saved intermediate batch 121 with 232 processed sites to phosphosite_data_temp\batch_6000.feather
+2025-03-21 23:31:01,352 - INFO - Processing batch 122/207 (50 proteins)
+2025-03-21 23:31:39,294 - INFO - Saved intermediate batch 122 with 225 processed sites to phosphosite_data_temp\batch_6050.feather
+2025-03-21 23:31:39,295 - INFO - Processing batch 123/207 (50 proteins)
+2025-03-21 23:32:19,134 - INFO - Saved intermediate batch 123 with 240 processed sites to phosphosite_data_temp\batch_6100.feather
+2025-03-21 23:32:19,135 - INFO - Processing batch 124/207 (50 proteins)
+2025-03-21 23:32:59,218 - INFO - Saved intermediate batch 124 with 179 processed sites to phosphosite_data_temp\batch_6150.feather
+2025-03-21 23:32:59,219 - INFO - Processing batch 125/207 (50 proteins)
+2025-03-21 23:33:37,806 - INFO - Saved intermediate batch 125 with 263 processed sites to phosphosite_data_temp\batch_6200.feather
+2025-03-21 23:33:37,807 - INFO - Processing batch 126/207 (50 proteins)
+2025-03-21 23:34:17,449 - INFO - Saved intermediate batch 126 with 259 processed sites to phosphosite_data_temp\batch_6250.feather
+2025-03-21 23:34:17,450 - INFO - Processing batch 127/207 (50 proteins)
+2025-03-21 23:34:55,373 - INFO - Saved intermediate batch 127 with 209 processed sites to phosphosite_data_temp\batch_6300.feather
+2025-03-21 23:34:55,374 - INFO - Processing batch 128/207 (50 proteins)
+2025-03-21 23:35:33,399 - INFO - Saved intermediate batch 128 with 196 processed sites to phosphosite_data_temp\batch_6350.feather
+2025-03-21 23:35:33,400 - INFO - Processing batch 129/207 (50 proteins)
+2025-03-21 23:36:10,033 - INFO - Saved intermediate batch 129 with 193 processed sites to phosphosite_data_temp\batch_6400.feather
+2025-03-21 23:36:10,033 - INFO - Processing batch 130/207 (50 proteins)
+2025-03-21 23:36:45,835 - INFO - Saved intermediate batch 130 with 202 processed sites to phosphosite_data_temp\batch_6450.feather
+2025-03-21 23:36:45,836 - INFO - Processing batch 131/207 (50 proteins)
+2025-03-21 23:37:26,753 - INFO - Saved intermediate batch 131 with 225 processed sites to phosphosite_data_temp\batch_6500.feather
+2025-03-21 23:37:26,754 - INFO - Processing batch 132/207 (50 proteins)
+2025-03-21 23:38:06,761 - INFO - Saved intermediate batch 132 with 209 processed sites to phosphosite_data_temp\batch_6550.feather
+2025-03-21 23:38:06,763 - INFO - Processing batch 133/207 (50 proteins)
+2025-03-21 23:38:46,093 - INFO - Saved intermediate batch 133 with 201 processed sites to phosphosite_data_temp\batch_6600.feather
+2025-03-21 23:38:46,093 - INFO - Processing batch 134/207 (50 proteins)
+2025-03-21 23:39:25,450 - INFO - Saved intermediate batch 134 with 198 processed sites to phosphosite_data_temp\batch_6650.feather
+2025-03-21 23:39:25,451 - INFO - Processing batch 135/207 (50 proteins)
+2025-03-21 23:40:04,776 - INFO - Saved intermediate batch 135 with 192 processed sites to phosphosite_data_temp\batch_6700.feather
+2025-03-21 23:40:04,777 - INFO - Processing batch 136/207 (50 proteins)
+2025-03-21 23:40:43,216 - INFO - Saved intermediate batch 136 with 178 processed sites to phosphosite_data_temp\batch_6750.feather
+2025-03-21 23:40:43,217 - INFO - Processing batch 137/207 (50 proteins)
+2025-03-21 23:41:20,969 - INFO - Saved intermediate batch 137 with 183 processed sites to phosphosite_data_temp\batch_6800.feather
+2025-03-21 23:41:20,970 - INFO - Processing batch 138/207 (50 proteins)
+2025-03-21 23:42:00,262 - INFO - Saved intermediate batch 138 with 183 processed sites to phosphosite_data_temp\batch_6850.feather
+2025-03-21 23:42:00,264 - INFO - Processing batch 139/207 (50 proteins)
+2025-03-21 23:42:38,901 - INFO - Saved intermediate batch 139 with 184 processed sites to phosphosite_data_temp\batch_6900.feather
+2025-03-21 23:42:38,901 - INFO - Processing batch 140/207 (50 proteins)
+2025-03-21 23:43:16,329 - INFO - Saved intermediate batch 140 with 153 processed sites to phosphosite_data_temp\batch_6950.feather
+2025-03-21 23:43:16,329 - INFO - Processing batch 141/207 (50 proteins)
+2025-03-21 23:43:54,912 - INFO - Saved intermediate batch 141 with 170 processed sites to phosphosite_data_temp\batch_7000.feather
+2025-03-21 23:43:54,912 - INFO - Processing batch 142/207 (50 proteins)
+2025-03-21 23:44:34,234 - INFO - Saved intermediate batch 142 with 157 processed sites to phosphosite_data_temp\batch_7050.feather
+2025-03-21 23:44:34,235 - INFO - Processing batch 143/207 (50 proteins)
+2025-03-21 23:45:12,977 - INFO - Saved intermediate batch 143 with 167 processed sites to phosphosite_data_temp\batch_7100.feather
+2025-03-21 23:45:12,978 - INFO - Processing batch 144/207 (50 proteins)
+2025-03-21 23:45:50,379 - INFO - Saved intermediate batch 144 with 170 processed sites to phosphosite_data_temp\batch_7150.feather
+2025-03-21 23:45:50,380 - INFO - Processing batch 145/207 (50 proteins)
+2025-03-21 23:46:29,542 - INFO - Saved intermediate batch 145 with 164 processed sites to phosphosite_data_temp\batch_7200.feather
+2025-03-21 23:46:29,542 - INFO - Processing batch 146/207 (50 proteins)
+2025-03-21 23:47:08,923 - INFO - Saved intermediate batch 146 with 165 processed sites to phosphosite_data_temp\batch_7250.feather
+2025-03-21 23:47:08,924 - INFO - Processing batch 147/207 (50 proteins)
+2025-03-21 23:47:45,373 - INFO - Saved intermediate batch 147 with 198 processed sites to phosphosite_data_temp\batch_7300.feather
+2025-03-21 23:47:45,373 - INFO - Processing batch 148/207 (50 proteins)
+2025-03-21 23:48:22,947 - INFO - Saved intermediate batch 148 with 184 processed sites to phosphosite_data_temp\batch_7350.feather
+2025-03-21 23:48:22,948 - INFO - Processing batch 149/207 (50 proteins)
+2025-03-21 23:49:01,281 - INFO - Saved intermediate batch 149 with 160 processed sites to phosphosite_data_temp\batch_7400.feather
+2025-03-21 23:49:01,281 - INFO - Processing batch 150/207 (50 proteins)
+2025-03-21 23:49:12,962 - WARNING - Residue number 303 out of range for Q9Y5I7
+2025-03-21 23:49:41,820 - INFO - Saved intermediate batch 150 with 178 processed sites to phosphosite_data_temp\batch_7450.feather
+2025-03-21 23:49:41,821 - INFO - Processing batch 151/207 (50 proteins)
+2025-03-21 23:50:19,830 - INFO - Saved intermediate batch 151 with 166 processed sites to phosphosite_data_temp\batch_7500.feather
+2025-03-21 23:50:19,830 - INFO - Processing batch 152/207 (50 proteins)
+2025-03-21 23:50:58,656 - INFO - Saved intermediate batch 152 with 133 processed sites to phosphosite_data_temp\batch_7550.feather
+2025-03-21 23:50:58,656 - INFO - Processing batch 153/207 (50 proteins)
+2025-03-21 23:51:36,378 - INFO - Saved intermediate batch 153 with 181 processed sites to phosphosite_data_temp\batch_7600.feather
+2025-03-21 23:51:36,379 - INFO - Processing batch 154/207 (50 proteins)
+2025-03-21 23:51:52,932 - WARNING - Failed to retrieve sequence for B7Z3J9
+2025-03-21 23:51:52,933 - WARNING - Missing structure or sequence for B7Z3J9
+2025-03-21 23:52:14,982 - INFO - Saved intermediate batch 154 with 158 processed sites to phosphosite_data_temp\batch_7650.feather
+2025-03-21 23:52:14,982 - INFO - Processing batch 155/207 (50 proteins)
+2025-03-21 23:52:52,065 - INFO - Saved intermediate batch 155 with 153 processed sites to phosphosite_data_temp\batch_7700.feather
+2025-03-21 23:52:52,066 - INFO - Processing batch 156/207 (50 proteins)
+2025-03-21 23:53:30,761 - INFO - Saved intermediate batch 156 with 131 processed sites to phosphosite_data_temp\batch_7750.feather
+2025-03-21 23:53:30,762 - INFO - Processing batch 157/207 (50 proteins)
+2025-03-21 23:54:10,820 - INFO - Saved intermediate batch 157 with 148 processed sites to phosphosite_data_temp\batch_7800.feather
+2025-03-21 23:54:10,821 - INFO - Processing batch 158/207 (50 proteins)
+2025-03-21 23:54:49,313 - INFO - Saved intermediate batch 158 with 144 processed sites to phosphosite_data_temp\batch_7850.feather
+2025-03-21 23:54:49,314 - INFO - Processing batch 159/207 (50 proteins)
+2025-03-21 23:55:28,029 - INFO - Saved intermediate batch 159 with 122 processed sites to phosphosite_data_temp\batch_7900.feather
+2025-03-21 23:55:28,029 - INFO - Processing batch 160/207 (50 proteins)
+2025-03-21 23:56:05,333 - INFO - Saved intermediate batch 160 with 143 processed sites to phosphosite_data_temp\batch_7950.feather
+2025-03-21 23:56:05,334 - INFO - Processing batch 161/207 (50 proteins)
+2025-03-21 23:56:45,391 - INFO - Saved intermediate batch 161 with 149 processed sites to phosphosite_data_temp\batch_8000.feather
+2025-03-21 23:56:45,392 - INFO - Processing batch 162/207 (50 proteins)
+2025-03-21 23:57:23,447 - INFO - Saved intermediate batch 162 with 134 processed sites to phosphosite_data_temp\batch_8050.feather
+2025-03-21 23:57:23,448 - INFO - Processing batch 163/207 (50 proteins)
+2025-03-21 23:58:04,156 - INFO - Saved intermediate batch 163 with 136 processed sites to phosphosite_data_temp\batch_8100.feather
+2025-03-21 23:58:04,157 - INFO - Processing batch 164/207 (50 proteins)
+2025-03-21 23:58:41,645 - INFO - Saved intermediate batch 164 with 130 processed sites to phosphosite_data_temp\batch_8150.feather
+2025-03-21 23:58:41,646 - INFO - Processing batch 165/207 (50 proteins)
+2025-03-21 23:59:17,481 - INFO - Saved intermediate batch 165 with 122 processed sites to phosphosite_data_temp\batch_8200.feather
+2025-03-21 23:59:17,482 - INFO - Processing batch 166/207 (50 proteins)
+2025-03-21 23:59:55,603 - INFO - Saved intermediate batch 166 with 133 processed sites to phosphosite_data_temp\batch_8250.feather
+2025-03-21 23:59:55,604 - INFO - Processing batch 167/207 (50 proteins)
+2025-03-22 00:00:32,876 - INFO - Saved intermediate batch 167 with 132 processed sites to phosphosite_data_temp\batch_8300.feather
+2025-03-22 00:00:32,876 - INFO - Processing batch 168/207 (50 proteins)
+2025-03-22 00:01:12,769 - INFO - Saved intermediate batch 168 with 104 processed sites to phosphosite_data_temp\batch_8350.feather
+2025-03-22 00:01:12,770 - INFO - Processing batch 169/207 (50 proteins)
+2025-03-22 00:01:48,912 - INFO - Saved intermediate batch 169 with 110 processed sites to phosphosite_data_temp\batch_8400.feather
+2025-03-22 00:01:48,912 - INFO - Processing batch 170/207 (50 proteins)
+2025-03-22 00:02:27,533 - INFO - Saved intermediate batch 170 with 113 processed sites to phosphosite_data_temp\batch_8450.feather
+2025-03-22 00:02:27,534 - INFO - Processing batch 171/207 (50 proteins)
+2025-03-22 00:03:07,234 - INFO - Saved intermediate batch 171 with 100 processed sites to phosphosite_data_temp\batch_8500.feather
+2025-03-22 00:03:07,234 - INFO - Processing batch 172/207 (50 proteins)
+2025-03-22 00:03:47,300 - INFO - Saved intermediate batch 172 with 92 processed sites to phosphosite_data_temp\batch_8550.feather
+2025-03-22 00:03:47,300 - INFO - Processing batch 173/207 (50 proteins)
+2025-03-22 00:04:24,848 - INFO - Saved intermediate batch 173 with 118 processed sites to phosphosite_data_temp\batch_8600.feather
+2025-03-22 00:04:24,848 - INFO - Processing batch 174/207 (50 proteins)
+2025-03-22 00:05:02,509 - INFO - Saved intermediate batch 174 with 95 processed sites to phosphosite_data_temp\batch_8650.feather
+2025-03-22 00:05:02,510 - INFO - Processing batch 175/207 (50 proteins)
+2025-03-22 00:05:39,158 - INFO - Saved intermediate batch 175 with 91 processed sites to phosphosite_data_temp\batch_8700.feather
+2025-03-22 00:05:39,158 - INFO - Processing batch 176/207 (50 proteins)
+2025-03-22 00:06:16,628 - INFO - Saved intermediate batch 176 with 115 processed sites to phosphosite_data_temp\batch_8750.feather
+2025-03-22 00:06:16,630 - INFO - Processing batch 177/207 (50 proteins)
+2025-03-22 00:06:46,557 - WARNING - Failed to retrieve sequence for A0A096LPH7
+2025-03-22 00:06:46,561 - WARNING - Missing structure or sequence for A0A096LPH7
+2025-03-22 00:06:54,949 - INFO - Saved intermediate batch 177 with 94 processed sites to phosphosite_data_temp\batch_8800.feather
+2025-03-22 00:06:54,949 - INFO - Processing batch 178/207 (50 proteins)
+2025-03-22 00:07:33,846 - INFO - Saved intermediate batch 178 with 81 processed sites to phosphosite_data_temp\batch_8850.feather
+2025-03-22 00:07:33,847 - INFO - Processing batch 179/207 (50 proteins)
+2025-03-22 00:08:12,442 - INFO - Saved intermediate batch 179 with 94 processed sites to phosphosite_data_temp\batch_8900.feather
+2025-03-22 00:08:12,442 - INFO - Processing batch 180/207 (50 proteins)
+2025-03-22 00:08:52,410 - INFO - Saved intermediate batch 180 with 90 processed sites to phosphosite_data_temp\batch_8950.feather
+2025-03-22 00:08:52,411 - INFO - Processing batch 181/207 (50 proteins)
+2025-03-22 00:09:33,602 - INFO - Saved intermediate batch 181 with 90 processed sites to phosphosite_data_temp\batch_9000.feather
+2025-03-22 00:09:33,603 - INFO - Processing batch 182/207 (50 proteins)
+2025-03-22 00:10:14,855 - INFO - Saved intermediate batch 182 with 101 processed sites to phosphosite_data_temp\batch_9050.feather
+2025-03-22 00:10:14,856 - INFO - Processing batch 183/207 (50 proteins)
+2025-03-22 00:10:52,845 - INFO - Saved intermediate batch 183 with 94 processed sites to phosphosite_data_temp\batch_9100.feather
+2025-03-22 00:10:52,846 - INFO - Processing batch 184/207 (50 proteins)
+2025-03-22 00:11:31,426 - INFO - Saved intermediate batch 184 with 87 processed sites to phosphosite_data_temp\batch_9150.feather
+2025-03-22 00:11:31,427 - INFO - Processing batch 185/207 (50 proteins)
+2025-03-22 00:12:09,043 - INFO - Saved intermediate batch 185 with 89 processed sites to phosphosite_data_temp\batch_9200.feather
+2025-03-22 00:12:09,043 - INFO - Processing batch 186/207 (50 proteins)
+2025-03-22 00:12:47,739 - INFO - Saved intermediate batch 186 with 83 processed sites to phosphosite_data_temp\batch_9250.feather
+2025-03-22 00:12:47,740 - INFO - Processing batch 187/207 (50 proteins)
+2025-03-22 00:13:26,668 - INFO - Saved intermediate batch 187 with 72 processed sites to phosphosite_data_temp\batch_9300.feather
+2025-03-22 00:13:26,668 - INFO - Processing batch 188/207 (50 proteins)
+2025-03-22 00:14:04,824 - INFO - Saved intermediate batch 188 with 78 processed sites to phosphosite_data_temp\batch_9350.feather
+2025-03-22 00:14:04,825 - INFO - Processing batch 189/207 (50 proteins)
+2025-03-22 00:14:41,780 - INFO - Saved intermediate batch 189 with 80 processed sites to phosphosite_data_temp\batch_9400.feather
+2025-03-22 00:14:41,781 - INFO - Processing batch 190/207 (50 proteins)
+2025-03-22 00:15:21,124 - INFO - Saved intermediate batch 190 with 81 processed sites to phosphosite_data_temp\batch_9450.feather
+2025-03-22 00:15:21,125 - INFO - Processing batch 191/207 (50 proteins)
+2025-03-22 00:15:59,085 - INFO - Saved intermediate batch 191 with 70 processed sites to phosphosite_data_temp\batch_9500.feather
+2025-03-22 00:15:59,085 - INFO - Processing batch 192/207 (50 proteins)
+2025-03-22 00:16:36,250 - INFO - Saved intermediate batch 192 with 69 processed sites to phosphosite_data_temp\batch_9550.feather
+2025-03-22 00:16:36,251 - INFO - Processing batch 193/207 (50 proteins)
+2025-03-22 00:17:13,495 - INFO - Saved intermediate batch 193 with 74 processed sites to phosphosite_data_temp\batch_9600.feather
+2025-03-22 00:17:13,495 - INFO - Processing batch 194/207 (50 proteins)
+2025-03-22 00:17:51,216 - INFO - Saved intermediate batch 194 with 69 processed sites to phosphosite_data_temp\batch_9650.feather
+2025-03-22 00:17:51,216 - INFO - Processing batch 195/207 (50 proteins)
+2025-03-22 00:18:27,425 - INFO - Saved intermediate batch 195 with 61 processed sites to phosphosite_data_temp\batch_9700.feather
+2025-03-22 00:18:27,426 - INFO - Processing batch 196/207 (50 proteins)
+2025-03-22 00:19:16,691 - INFO - Saved intermediate batch 196 with 71 processed sites to phosphosite_data_temp\batch_9750.feather
+2025-03-22 00:19:16,691 - INFO - Processing batch 197/207 (50 proteins)
+2025-03-22 00:19:55,726 - INFO - Saved intermediate batch 197 with 65 processed sites to phosphosite_data_temp\batch_9800.feather
+2025-03-22 00:19:55,727 - INFO - Processing batch 198/207 (50 proteins)
+2025-03-22 00:20:34,206 - INFO - Saved intermediate batch 198 with 65 processed sites to phosphosite_data_temp\batch_9850.feather
+2025-03-22 00:20:34,206 - INFO - Processing batch 199/207 (50 proteins)
+2025-03-22 00:21:12,007 - INFO - Saved intermediate batch 199 with 64 processed sites to phosphosite_data_temp\batch_9900.feather
+2025-03-22 00:21:12,007 - INFO - Processing batch 200/207 (50 proteins)
+2025-03-22 00:21:50,034 - INFO - Saved intermediate batch 200 with 60 processed sites to phosphosite_data_temp\batch_9950.feather
+2025-03-22 00:21:50,034 - INFO - Processing batch 201/207 (50 proteins)
+2025-03-22 00:22:29,142 - INFO - Saved intermediate batch 201 with 59 processed sites to phosphosite_data_temp\batch_10000.feather
+2025-03-22 00:22:29,143 - INFO - Processing batch 202/207 (50 proteins)
+2025-03-22 00:23:07,801 - INFO - Saved intermediate batch 202 with 58 processed sites to phosphosite_data_temp\batch_10050.feather
+2025-03-22 00:23:07,802 - INFO - Processing batch 203/207 (50 proteins)
+2025-03-22 00:23:47,660 - INFO - Saved intermediate batch 203 with 53 processed sites to phosphosite_data_temp\batch_10100.feather
+2025-03-22 00:23:47,661 - INFO - Processing batch 204/207 (50 proteins)
+2025-03-22 00:24:26,507 - INFO - Saved intermediate batch 204 with 52 processed sites to phosphosite_data_temp\batch_10150.feather
+2025-03-22 00:24:26,508 - INFO - Processing batch 205/207 (50 proteins)
+2025-03-22 00:25:04,488 - INFO - Saved intermediate batch 205 with 51 processed sites to phosphosite_data_temp\batch_10200.feather
+2025-03-22 00:25:04,489 - INFO - Processing batch 206/207 (50 proteins)
+2025-03-22 00:25:43,675 - INFO - Saved intermediate batch 206 with 52 processed sites to phosphosite_data_temp\batch_10250.feather
+2025-03-22 00:25:43,676 - INFO - Processing batch 207/207 (13 proteins)
+2025-03-22 00:25:53,994 - INFO - Saved intermediate batch 207 with 13 processed sites to phosphosite_data_temp\batch_10300.feather
+2025-03-22 00:25:53,994 - INFO - Combining all results...
+2025-03-22 00:25:54,398 - INFO - Saving final result to C:/Users/mz30/protein_explorer/PhosphositeSuppData.feather
+2025-03-22 00:25:54,472 - INFO - Cleaning up temporary files
+2025-03-22 00:25:54,599 - INFO - Phosphosite supplementary data creation complete. Processed 81939 sites.
+2025-03-22 00:25:56,890 - INFO - Total execution time: 8158.17 seconds
