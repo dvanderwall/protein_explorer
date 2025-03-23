@@ -385,76 +385,6 @@ def protein(identifier):
         logger.error(f"Error in protein view: {e}")
         return render_template('error.html', error=str(e))
 
-@app.route('/phosphosite', methods=['GET', 'POST'])
-def phosphosite_analysis():
-    """Phosphosite structural analysis page with improved error handling and supplementary data."""
-    import os
-    from flask import request, render_template
-    
-    # Import our phospho_analyzer module with enhanced functions
-    from protein_explorer.analysis.phospho_analyzer import (
-        analyze_protein, get_phosphosite_data, enhance_phosphosite, enhance_structural_matches
-    )
-    
-    # Initialize variables
-    results = None
-    error = None
-    
-    if request.method == 'POST':
-        # Get identifier from form
-        identifier = request.form.get('identifier', '')
-        id_type = request.form.get('id_type', 'uniprot')
-        
-        if not identifier:
-            return render_template('phosphosite.html', error="Please enter an identifier")
-        
-        try:
-            parquet_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
-                         'Combined_Kinome_10A_Master_Filtered_2.feather')
-
-            # Run the full analysis - now with supplementary data
-            results = analyze_protein(identifier, id_type, parquet_file)
-            
-            # Further enhance with any additional supplementary data
-            if results and 'phosphosites' in results and results['phosphosites']:
-                phosphosites = results['phosphosites']
-                uniprot_id = results['protein_info']['uniprot_id']
-                
-                # Add additional supplementary fields to each phosphosite if not already added
-                for i, site in enumerate(phosphosites):
-                    if 'resno' in site:
-                        site_id = f"{uniprot_id}_{site['resno']}"
-                        supp_data = get_phosphosite_data(site_id)
-                        
-                        if supp_data:
-                            # Add any fields that weren't already added by enhance_phosphosite
-                            for key in ['surface_accessibility', 'site_plddt', 'secondary_structure',
-                                       'polar_aa_percent', 'nonpolar_aa_percent', 
-                                       'acidic_aa_percent', 'basic_aa_percent']:
-                                if key in supp_data and supp_data[key] is not None and key not in site:
-                                    site[key] = supp_data[key]
-            
-            # Also enhance structural matches with supplementary data if available
-            if results and 'structural_matches' in results and results['structural_matches']:
-                # Get all match lists
-                for site, matches in results['structural_matches'].items():
-                    # Enhance these matches
-                    results['structural_matches'][site] = enhance_structural_matches(matches, site)
-            
-            # Return results - now including enhanced data
-            return render_template('phosphosite.html', 
-                                  protein_info=results['protein_info'],
-                                  phosphosites=results['phosphosites'],
-                                  structural_matches=results['structural_matches'],
-                                  error=results.get('error'))
-                
-        except Exception as e:
-            print(f"Error in phosphosite analysis: {e}")
-            error = str(e)
-            return render_template('phosphosite.html', error=error)
-    
-    # GET request - show empty form
-    return render_template('phosphosite.html')
 
 @app.route('/analyze', methods=['GET', 'POST'])
 def analyze():
@@ -654,7 +584,7 @@ def phosphosite_analysis():
     import os
     from flask import request, render_template
     
-    # Import our phospho_analyzer module with enhanced functions
+    # Import phospho_analyzer functions
     from protein_explorer.analysis.phospho_analyzer import (
         analyze_protein, get_phosphosite_data, enhance_phosphosite, enhance_structural_matches
     )
@@ -672,39 +602,14 @@ def phosphosite_analysis():
             return render_template('phosphosite.html', error="Please enter an identifier")
         
         try:
+            # Find the data file
             parquet_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
                          'Combined_Kinome_10A_Master_Filtered_2.feather')
 
-            # Run the full analysis - now with supplementary data
+            # Run the full analysis with supplementary data
             results = analyze_protein(identifier, id_type, parquet_file)
             
-            # Further enhance with any additional supplementary data
-            if results and 'phosphosites' in results and results['phosphosites']:
-                phosphosites = results['phosphosites']
-                uniprot_id = results['protein_info']['uniprot_id']
-                
-                # Add additional supplementary fields to each phosphosite if not already added
-                for i, site in enumerate(phosphosites):
-                    if 'resno' in site:
-                        site_id = f"{uniprot_id}_{site['resno']}"
-                        supp_data = get_phosphosite_data(site_id)
-                        
-                        if supp_data:
-                            # Add any fields that weren't already added by enhance_phosphosite
-                            for key in ['surface_accessibility', 'site_plddt', 'secondary_structure',
-                                       'polar_aa_percent', 'nonpolar_aa_percent', 
-                                       'acidic_aa_percent', 'basic_aa_percent']:
-                                if key in supp_data and supp_data[key] is not None and key not in site:
-                                    site[key] = supp_data[key]
-            
-            # Also enhance structural matches with supplementary data if available
-            if results and 'structural_matches' in results and results['structural_matches']:
-                # Get all match lists
-                for site, matches in results['structural_matches'].items():
-                    # Enhance these matches
-                    results['structural_matches'][site] = enhance_structural_matches(matches, site)
-            
-            # Return results - now including enhanced data
+            # Return results including enhanced data
             return render_template('phosphosite.html', 
                                   protein_info=results['protein_info'],
                                   phosphosites=results['phosphosites'],
@@ -744,12 +649,14 @@ def site_detail(uniprot_id, site):
         site_type = site_match.group(1)
         site_number = int(site_match.group(2))
         
-        # First check if we have supplementary data for this site
+        # Get supplementary data for this site
+        from protein_explorer.analysis.phospho_analyzer import get_phosphosite_data, enhance_phosphosite
         site_id = f"{uniprot_id}_{site_number}"
         supp_data = get_phosphosite_data(site_id)
         
         # Analyze phosphosites
-        all_phosphosites = pe.analysis.phospho.analyze_phosphosites(sequence, structure, uniprot_id)
+        from protein_explorer.analysis.phospho import analyze_phosphosites
+        all_phosphosites = analyze_phosphosites(sequence, structure, uniprot_id)
         
         # Find the specific site
         site_data = next((s for s in all_phosphosites if s['site'] == site), None)
@@ -759,25 +666,16 @@ def site_detail(uniprot_id, site):
         # Enhance with supplementary data if available
         if supp_data:
             site_data = enhance_phosphosite(site_data, uniprot_id)
-            
-            # Add any additional chemical properties for the motif
-            for key in ['polar_aa_percent', 'nonpolar_aa_percent', 'acidic_aa_percent', 'basic_aa_percent']:
-                if key in supp_data and key not in site_data:
-                    site_data[key] = supp_data[key]
-                    
-            # Add any structural context information
-            for key in ['secondary_structure', 'surface_accessibility', 'site_plddt', 'motif_plddt']:
-                if key in supp_data and key not in site_data:
-                    site_data[key] = supp_data[key]
         
         # Find structural matches
-        structural_matches = None
+        from protein_explorer.analysis.phospho_analyzer import find_structural_matches, enhance_structural_matches
+        structural_matches = []
         try:
-            # Get raw matches from the Combined_Kinome data
+            # Get raw matches
             all_matches = find_structural_matches(uniprot_id, [site_data], top_n=None)
             raw_matches = all_matches.get(site, [])
             
-            # Filter out matches with RMSD=0 (self-matches)
+            # Filter out self-matches
             raw_matches = [match for match in raw_matches if match.get('rmsd', 0) > 0.01]
             
             # Enhance matches with supplementary data
@@ -790,50 +688,69 @@ def site_detail(uniprot_id, site):
             logger.error(f"Error finding structural matches: {e}")
             structural_matches = []
         
-        # Create structure visualization focused on the site
+        # Create basic structure visualization
         structure_html = pe.visualization.visualize_structure(
             structure,
             sequence=sequence
         )
         
-        # Create a 3D model highlighting the specific site
-        site_structure_html = create_site_focused_model(structure, site_number, site_type)
-        
-        # Add detailed motif analysis if available
-        if 'motif' in site_data:
-            motif = site_data['motif']
-            site_data['motif_analysis'] = analyze_motif(motif, site_type, site_number)
-        
-        # Create enhanced visualizations
+        # Create specialized visualizations
+        from protein_explorer.visualization.network import create_phosphosite_network
+        from protein_explorer.analysis.phospho_analyzer import (
+            create_comparative_motif_visualization,
+            enhance_site_visualization,
+            analyze_residue_distributions,
+            analyze_phosphosite_context
+        )
         
         # 1. Network visualization
-        network_html = create_phosphosite_network(site, structural_matches, site_data)
+        try:
+            network_html = create_phosphosite_network(site, structural_matches, site_data)
+        except Exception as e:
+            logger.error(f"Error creating network visualization: {e}")
+            network_html = f"<div class='alert alert-warning'>Error creating network visualization: {str(e)}</div>"
             
         # 2. Comparative motif visualization
-        if structural_matches and 'motif' in site_data:
-            motif_html = create_comparative_motif_visualization(site_data, structural_matches)
-        else:
-            motif_html = "<div class='alert alert-info'>No motif data available for comparison.</div>"
+        try:
+            if structural_matches and 'motif' in site_data:
+                motif_html = create_comparative_motif_visualization(site_data, structural_matches)
+            else:
+                motif_html = "<div class='alert alert-info'>No motif data available for comparison.</div>"
+        except Exception as e:
+            logger.error(f"Error creating motif visualization: {e}")
+            motif_html = f"<div class='alert alert-warning'>Error creating motif visualization: {str(e)}</div>"
             
         # 3. Residue distribution analysis
-        if structural_matches:
-            distribution_data = analyze_residue_distributions(structural_matches)
-        else:
+        try:
+            if structural_matches:
+                distribution_data = analyze_residue_distributions(structural_matches)
+            else:
+                distribution_data = None
+        except Exception as e:
+            logger.error(f"Error analyzing residue distributions: {e}")
             distribution_data = None
             
         # 4. Enhanced 3D visualization
-        enhanced_3d_html = enhance_site_visualization(uniprot_id, site, site_data)
-        
+        try:
+            enhanced_3d_html = enhance_site_visualization(uniprot_id, site, site_data)
+        except Exception as e:
+            logger.error(f"Error creating enhanced 3D visualization: {e}")
+            enhanced_3d_html = f"<div class='alert alert-warning'>Error creating enhanced 3D visualization: {str(e)}</div>"
+            
         # 5. Structural context analysis
-        context_data = analyze_phosphosite_context(structure, site_number, site_type)
+        try:
+            context_data = analyze_phosphosite_context(structure, site_number, site_type)
+        except Exception as e:
+            logger.error(f"Error analyzing structural context: {e}")
+            context_data = None
         
+        # Render the template with all the data
         return render_template(
             'site.html',
             protein=protein_data,
             site=site,
             site_data=site_data,
             structure_html=structure_html,
-            site_structure_html=site_structure_html,
             structural_matches=structural_matches,
             supplementary_data=supp_data,
             network_html=network_html,
@@ -846,7 +763,7 @@ def site_detail(uniprot_id, site):
         logger.error(f"Error in site detail view: {e}")
         return render_template('error.html', error=str(e))
     
-
+    
 def analyze_motif(motif: str, site_type: str, site_number: int) -> Dict:
     """
     Analyze a phosphosite motif sequence for additional insights.
