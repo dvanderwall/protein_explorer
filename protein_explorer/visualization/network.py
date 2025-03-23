@@ -133,6 +133,103 @@ def create_network_figure(network: nx.Graph,
     
     return fig
 
+def create_phosphosite_network(site, matches, site_data):
+    """
+    Create a network visualization of phosphosite structural matches.
+    
+    Args:
+        site: Site identifier (e.g., "S123")
+        matches: List of structural match dictionaries
+        site_data: Dictionary with primary site information
+        
+    Returns:
+        HTML code for the network visualization
+    """
+    # No need to create the visualization here - we'll return the data
+    # that will be used by the JavaScript in site.html
+    
+    # Create nodes and links data for D3.js
+    nodes = []
+    links = []
+    
+    # Add primary node
+    primary_uniprot = site_data.get('uniprot_id', 'unknown')
+    primary_id = f"{primary_uniprot}_{site}"
+    nodes.append({
+        'id': primary_id,
+        'name': site,
+        'uniprot': primary_uniprot,
+        'type': 'primary',
+        'size': 12,
+        'plddt': site_data.get('mean_plddt', 'N/A'),
+        'nearby_count': site_data.get('nearby_count', 'N/A'),
+        'motif': site_data.get('motif', 'N/A')
+    })
+    
+    # Add match nodes and links
+    for match in matches:
+        if not match:
+            continue
+            
+        # Skip self-matches
+        if match.get('rmsd', 0) < 0.01:
+            continue
+            
+        target_site = match.get('target_site', '')
+        target_uniprot = match.get('target_uniprot', '')
+        node_id = f"{target_uniprot}_{target_site}"
+        
+        # Add node
+        nodes.append({
+            'id': node_id,
+            'name': target_site,
+            'uniprot': target_uniprot,
+            'site': target_site,
+            'type': 'match',
+            'rmsd': match.get('rmsd', 0),
+            'size': 8,
+            'plddt': match.get('plddt', 'N/A'),
+            'nearby_count': match.get('nearby_count', 'N/A'),
+            'motif': match.get('motif', 'N/A')
+        })
+        
+        # Add link
+        links.append({
+            'source': primary_id,
+            'target': node_id,
+            'rmsd': match.get('rmsd', 0)
+        })
+    
+    # Return only the data as JSON
+    import json
+    network_data = {
+        'nodes': nodes,
+        'links': links
+    }
+    
+    # Create the HTML with a container and script to initialize the visualization
+    html = f"""
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Structural Similarity Network</h5>
+        </div>
+        <div class="card-body">
+            <p class="card-text">
+                This network shows structural similarities between the selected phosphorylation site (blue) 
+                and other phosphosites in the database. Closer matches (lower RMSD values) indicate higher 
+                structural similarity and potentially similar functional roles.
+            </p>
+            <div id="network-container" style="height: 500px; width: 100%; position: relative;"></div>
+            <script>
+                // Store the network data as a global variable for the visualization script
+                window.networkData = {json.dumps(network_data)};
+            </script>
+        </div>
+    </div>
+    """
+    
+    return html
+
 def visualize_network(network: nx.Graph,
                      highlight_nodes: Optional[List[str]] = None,
                      node_colors: Optional[Dict[str, str]] = None,

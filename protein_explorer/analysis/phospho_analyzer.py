@@ -799,235 +799,210 @@ def enhance_site_visualization(uniprot_id, site, supplementary_data=None):
     
     # Create visualization code
     js_code = f"""
-    <style>
-        .structure-container {{
-            position: relative;
-            width: 100%;
-            height: 500px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }}
-        .info-panel {{
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            font-size: 14px;
-            z-index: 100;
-            max-width: 200px;
-        }}
-        .controls-panel {{
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            z-index: 100;
-        }}
-        .controls-panel button {{
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            padding: 5px 10px;
-            margin-right: 5px;
-            font-size: 12px;
-            cursor: pointer;
-        }}
-        .legend-panel {{
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 8px;
-            font-size: 12px;
-            z-index: 100;
-        }}
-        .legend-item {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 3px;
-        }}
-        .legend-color {{
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }}
-    </style>
-    
-    <div class="structure-container" id="structure-container">
-        <div class="info-panel">
-            <h6 class="mb-2">Site: {site}</h6>
-            <p class="mb-1"><strong>pLDDT:</strong> {site_plddt}</p>
-            <p class="mb-1"><strong>Surface Access:</strong> {surface_access}%</p>
-            <p class="mb-1"><strong>Nearby Residues:</strong> {nearby_count}</p>
-            <p class="mb-1"><strong>2° Structure:</strong> {secondary_structure}</p>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">3D Site Visualization</h5>
         </div>
-        <div class="controls-panel">
-            <button id="reset-view-btn">Reset View</button>
-            <button id="toggle-view-btn">Full Protein</button>
-            <button id="toggle-color-btn">Color by Type</button>
-        </div>
-        <div class="legend-panel">
-            <div class="legend-item"><div class="legend-color" style="background-color:#FF4500;"></div> Target Site</div>
-            <div class="legend-item"><div class="legend-color" style="background-color:#87CEFA;"></div> Polar</div>
-            <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;"></div> Non-polar</div>
-            <div class="legend-item"><div class="legend-color" style="background-color:#FF6347;"></div> Acidic</div>
-            <div class="legend-item"><div class="legend-color" style="background-color:#98FB98;"></div> Basic</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <div id="site-viewer" style="width: 100%; height: 450px; border: 1px solid #ddd; border-radius: 5px;"></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Site Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Site:</strong> {site}</p>
+                            <p><strong>pLDDT:</strong> {site_plddt}</p>
+                            <p><strong>Surface Accessibility:</strong> {surface_access}%</p>
+                            <p><strong>Nearby Residues:</strong> {nearby_count}</p>
+                            <p><strong>Secondary Structure:</strong> {secondary_structure}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button id="reset-view" class="btn btn-sm btn-outline-primary">Reset View</button>
+                        <button id="toggle-view" class="btn btn-sm btn-outline-secondary">Full Protein</button>
+                        <button id="toggle-color" class="btn btn-sm btn-outline-success">Color by Type</button>
+                    </div>
+                    <div class="mt-3">
+                        <div class="d-flex align-items-center mb-1">
+                            <div style="width:12px; height:12px; background-color:#FF4500; border-radius:50%; margin-right:5px;"></div>
+                            <small>Target Site</small>
+                        </div>
+                        <div class="d-flex align-items-center mb-1">
+                            <div style="width:12px; height:12px; background-color:#87CEFA; border-radius:50%; margin-right:5px;"></div>
+                            <small>Polar Residues</small>
+                        </div>
+                        <div class="d-flex align-items-center mb-1">
+                            <div style="width:12px; height:12px; background-color:#FFD700; border-radius:50%; margin-right:5px;"></div>
+                            <small>Non-polar Residues</small>
+                        </div>
+                        <div class="d-flex align-items-center mb-1">
+                            <div style="width:12px; height:12px; background-color:#FF6347; border-radius:50%; margin-right:5px;"></div>
+                            <small>Acidic Residues</small>
+                        </div>
+                        <div class="d-flex align-items-center mb-1">
+                            <div style="width:12px; height:12px; background-color:#98FB98; border-radius:50%; margin-right:5px;"></div>
+                            <small>Basic Residues</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/gh/arose/ngl@v2.0.0-dev.37/dist/ngl.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {{
-            var stage = new NGL.Stage('structure-container', {{backgroundColor: "white"}});
-            
-            window.addEventListener('resize', function() {{
-                stage.handleResize();
-            }});
-            
-            // Define residue type groupings
-            const aminoAcidGroups = {{
-                polar: ["SER", "THR", "TYR", "CYS", "ASN", "GLN"],
-                nonpolar: ["ALA", "VAL", "ILE", "LEU", "MET", "PHE", "TRP", "PRO", "GLY"],
-                acidic: ["ASP", "GLU"],
-                basic: ["LYS", "ARG", "HIS"]
-            }};
-            
-            // Define colors for each group
-            const groupColors = {{
-                polar: [135/255, 206/255, 250/255],     // Light blue
-                nonpolar: [255/255, 215/255, 0/255],    // Gold
-                acidic: [255/255, 99/255, 71/255],      // Tomato
-                basic: [152/255, 251/255, 152/255]      // Pale green
-            }};
-            
-            // Function to determine AA group
-            function getAminoAcidGroup(resname) {{
-                for (const [group, residues] of Object.entries(aminoAcidGroups)) {{
-                    if (residues.includes(resname)) {{
-                        return group;
-                    }}
+    document.addEventListener('DOMContentLoaded', function() {{
+        // Initialize NGL viewer
+        const viewer = new NGL.Stage('site-viewer', {{backgroundColor: "white"}});
+        
+        // Handle window resizing
+        window.addEventListener('resize', function() {{
+            viewer.handleResize();
+        }});
+        
+        // Define residue type groupings
+        const aminoAcidGroups = {{
+            polar: ["SER", "THR", "TYR", "CYS", "ASN", "GLN"],
+            nonpolar: ["ALA", "VAL", "ILE", "LEU", "MET", "PHE", "TRP", "PRO", "GLY"],
+            acidic: ["ASP", "GLU"],
+            basic: ["LYS", "ARG", "HIS"]
+        }};
+        
+        // Define colors for each group
+        const groupColors = {{
+            polar: [135/255, 206/255, 250/255],     // Light blue
+            nonpolar: [255/255, 215/255, 0/255],    // Gold
+            acidic: [255/255, 99/255, 71/255],      // Tomato
+            basic: [152/255, 251/255, 152/255]      // Pale green
+        }};
+        
+        // Function to determine AA group
+        function getAminoAcidGroup(resname) {{
+            for (const [group, residues] of Object.entries(aminoAcidGroups)) {{
+                if (residues.includes(resname)) {{
+                    return group;
                 }}
-                return "other";
+            }}
+            return "other";
+        }}
+        
+        // Color function based on amino acid type
+        function colorByType(atom) {{
+            // Special color for the target site
+            if (atom.resno === {site_number}) {{
+                return [1.0, 0.27, 0.0];  // #FF4500 orange-red
             }}
             
-            // Color function based on amino acid type
-            function colorByType(atom) {{
-                // Special color for the target site
-                if (atom.resno === {site_number}) {{
-                    return [1.0, 0.27, 0.0];  // #FF4500 orange-red
-                }}
-                
-                // Color by amino acid type
-                const group = getAminoAcidGroup(atom.resname);
-                if (group in groupColors) {{
-                    return groupColors[group];
-                }}
-                
-                // Default grey for others
-                return [0.5, 0.5, 0.5];
+            // Color by amino acid type
+            const group = getAminoAcidGroup(atom.resname);
+            if (group in groupColors) {{
+                return groupColors[group];
             }}
             
-            // Load structure
-            var pdbBlob = new Blob([atob('{pdb_base64}')], {{type: 'text/plain'}});
+            // Default grey for others
+            return [0.5, 0.5, 0.5];
+        }}
+        
+        // Load structure
+        const pdbBlob = new Blob([atob('{pdb_base64}')], {{type: 'text/plain'}});
+        
+        viewer.loadFile(pdbBlob, {{ext: 'pdb'}}).then(function(component) {{
+            // Get target selection
+            const siteSelection = "{site_number} and .{site_type}";
+            const environmentSelection = siteSelection + " or (" + siteSelection + " around 5)";
             
-            stage.loadFile(pdbBlob, {{ext: 'pdb'}}).then(function(component) {{
-                // Get target selection
-                const siteSelection = "{site_number} and .{site_type}";
-                const environmentSelection = siteSelection + " or (" + siteSelection + " around 5)";
-                
-                // State variables
-                let isFullView = false;
-                let colorMode = "element";  // "element" or "type"
-                
-                // Reset button
-                document.getElementById('reset-view-btn').addEventListener('click', function() {{
-                    updateRepresentations();
-                }});
-                
-                // Toggle view button
-                document.getElementById('toggle-view-btn').addEventListener('click', function() {{
-                    isFullView = !isFullView;
-                    this.textContent = isFullView ? 'Site Focus' : 'Full Protein';
-                    updateRepresentations();
-                }});
-                
-                // Toggle color button
-                document.getElementById('toggle-color-btn').addEventListener('click', function() {{
-                    colorMode = colorMode === "element" ? "type" : "element";
-                    this.textContent = colorMode === "element" ? 'Color by Type' : 'Color by Element';
-                    updateRepresentations();
-                }});
-                
-                // Update all representations based on current state
-                function updateRepresentations() {{
-                    // Remove all existing representations
-                    component.removeAllRepresentations();
-                    
-                    // Add cartoon representation for entire protein
-                    component.addRepresentation("cartoon", {{
-                        color: colorMode === "type" ? colorByType : "chainid",
-                        opacity: 0.7,
-                        smoothSheet: true
-                    }});
-                    
-                    // Add ball and stick for target residue
-                    component.addRepresentation("ball+stick", {{
-                        sele: siteSelection,
-                        color: colorMode === "type" ? colorByType : "element",
-                        aspectRatio: 1.5,
-                        scale: 1.2
-                    }});
-                    
-                    // Add licorice for environment (if not full view)
-                    if (!isFullView) {{
-                        component.addRepresentation("licorice", {{
-                            sele: environmentSelection + " and not " + siteSelection,
-                            color: colorMode === "type" ? colorByType : "element",
-                            opacity: 0.8,
-                            scale: 0.8
-                        }});
-                        
-                        // Add labels
-                        component.addRepresentation("label", {{
-                            sele: environmentSelection,
-                            color: "#333333",
-                            labelType: "format",
-                            labelFormat: "{{resname}}{{resno}}",
-                            labelGrouping: "residue",
-                            attachment: "middle-center",
-                            showBackground: true,
-                            backgroundColor: "white",
-                            backgroundOpacity: 0.5
-                        }});
-                    }}
-                    
-                    // Set view
-                    if (isFullView) {{
-                        component.autoView();
-                    }} else {{
-                        component.autoView(environmentSelection, 2000);
-                    }}
-                }}
-                
-                // Initial setup
+            // State variables
+            let isFullView = false;
+            let colorMode = "element";  // "element" or "type"
+            
+            // Button handlers
+            document.getElementById('reset-view').addEventListener('click', function() {{
                 updateRepresentations();
             }});
+            
+            document.getElementById('toggle-view').addEventListener('click', function() {{
+                isFullView = !isFullView;
+                this.textContent = isFullView ? 'Site Focus' : 'Full Protein';
+                updateRepresentations();
+            }});
+            
+            document.getElementById('toggle-color').addEventListener('click', function() {{
+                colorMode = colorMode === "element" ? "type" : "element";
+                this.textContent = colorMode === "element" ? 'Color by Type' : 'Color by Element';
+                updateRepresentations();
+            }});
+            
+            // Update all representations based on current state
+            function updateRepresentations() {{
+                // Remove all existing representations
+                component.removeAllRepresentations();
+                
+                // Add cartoon representation for entire protein
+                component.addRepresentation("cartoon", {{
+                    color: colorMode === "type" ? colorByType : "chainid",
+                    opacity: 0.7,
+                    smoothSheet: true
+                }});
+                
+                // Add ball and stick for target residue
+                component.addRepresentation("ball+stick", {{
+                    sele: siteSelection,
+                    color: colorMode === "type" ? colorByType : "element",
+                    aspectRatio: 1.5,
+                    scale: 1.2
+                }});
+                
+                // Add licorice for environment (if not full view)
+                if (!isFullView) {{
+                    component.addRepresentation("licorice", {{
+                        sele: environmentSelection + " and not " + siteSelection,
+                        color: colorMode === "type" ? colorByType : "element",
+                        opacity: 0.8,
+                        scale: 0.8
+                    }});
+                    
+                    // Add labels
+                    component.addRepresentation("label", {{
+                        sele: environmentSelection,
+                        color: "#333333",
+                        labelType: "format",
+                        labelFormat: "{{resname}}{{resno}}",
+                        labelGrouping: "residue",
+                        attachment: "middle-center",
+                        showBackground: true,
+                        backgroundColor: "white",
+                        backgroundOpacity: 0.5
+                    }});
+                }}
+                
+                // Set view
+                if (isFullView) {{
+                    component.autoView();
+                }} else {{
+                    component.autoView(environmentSelection, 2000);
+                }}
+            }}
+            
+            // Initial setup
+            updateRepresentations();
+        }}).catch(function(error) {{
+            console.error("Error loading structure:", error);
+            document.getElementById('site-viewer').innerHTML = 
+                '<div class="alert alert-danger mt-3">Error loading structure: ' + error.message + '</div>';
         }});
+    }});
     </script>
     """
     
     return js_code
 
-
 def create_comparative_motif_visualization(primary_site, matches):
     """
     Create a comparative visualization of sequence motifs for the primary site
-    and its structural matches.
+    and its structural matches, showing -5 to +5 range around the phosphosite.
     
     Args:
         primary_site: Dictionary with primary site information
@@ -1038,10 +1013,52 @@ def create_comparative_motif_visualization(primary_site, matches):
     """
     if not primary_site or 'motif' not in primary_site:
         return "<div class='alert alert-warning'>Motif data not available for primary site</div>"
-    
+
     # Get primary site motif
     primary_motif = primary_site.get('motif', '')
     primary_site_name = primary_site.get('site', 'Unknown')
+
+    # IMPROVED: More aggressive approach to get the UniProt ID
+    # First try the direct uniprot_id field
+    primary_uniprot = primary_site.get('uniprot_id', '')
+
+    # If that's empty, try other common field names
+    if not primary_uniprot:
+        for field in ['query_uniprot', 'protein_id', 'uniprotid', 'uniprot']:
+            if field in primary_site and primary_site[field]:
+                primary_uniprot = primary_site[field]
+                break
+
+    # If still empty, try to get from protein dictionary if it exists
+    if not primary_uniprot and isinstance(primary_site.get('protein'), dict):
+        primary_uniprot = primary_site['protein'].get('uniprot_id', '')
+
+    # If still empty, check if it's in any matches (as query_uniprot)
+    if not primary_uniprot and matches:
+        for match in matches:
+            if 'query_uniprot' in match and match['query_uniprot']:
+                primary_uniprot = match['query_uniprot']
+                break
+
+    # If still empty, try to infer from site_id if present
+    if not primary_uniprot and 'site_id' in primary_site:
+        site_id = primary_site['site_id']
+        if '_' in site_id:
+            primary_uniprot = site_id.split('_')[0]
+
+    # EXPLICIT DEBUG: Print what we found
+    print(f"DEBUG - Primary UniProt: {primary_uniprot}")
+    if not primary_uniprot:
+        print("DEBUG - Failed to find UniProt ID in:", primary_site.keys())
+
+
+    # Get position information for proper X padding
+    primary_site_pos = None
+    if primary_site_name:
+        import re
+        site_match = re.match(r'([STY])(\d+)', primary_site_name)
+        if site_match:
+            primary_site_pos = int(site_match.group(2))
     
     # Filter matches that have motif data
     valid_matches = [m for m in matches if 'motif' in m and m['motif']]
@@ -1068,10 +1085,14 @@ def create_comparative_motif_visualization(primary_site, matches):
             margin-bottom: 5px;
         }
         .motif-label {
-            width: 100px;
+            width: 130px;
             font-weight: bold;
             text-align: right;
             padding-right: 10px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .motif-sequence {
             display: flex;
@@ -1090,8 +1111,17 @@ def create_comparative_motif_visualization(primary_site, matches):
             color: white;
             font-weight: bold;
         }
-        .motif-aa.polar {
+        .motif-aa.sty {
             background-color: #bbdefb;
+        }
+        .motif-aa.nq {
+            background-color: #b39ddb;
+        }
+        .motif-aa.cys {
+            background-color: #ffcc80;
+        }
+        .motif-aa.proline {
+            background-color: #81c784;
         }
         .motif-aa.nonpolar {
             background-color: #ffecb3;
@@ -1105,9 +1135,18 @@ def create_comparative_motif_visualization(primary_site, matches):
         .motif-aa.special {
             background-color: #e1bee7;
         }
+        .motif-aa.aa-x {
+            background-color: #e0e0e0;
+            color: #9e9e9e;
+        }
+        .match-info {
+            margin-left: 10px;
+            font-size: 12px;
+            color: #333;
+        }
         .motif-position {
             display: flex;
-            padding-left: 100px;
+            padding-left: 130px;
             margin-bottom: 10px;
         }
         .motif-position span {
@@ -1116,47 +1155,127 @@ def create_comparative_motif_visualization(primary_site, matches):
             font-size: 10px;
             color: #666;
         }
-        .match-info {
-            margin-left: 10px;
-            font-size: 12px;
-            color: #333;
-        }
     </style>
     
     <div class="motif-comparison">
         <h5 class="mb-3">Motif Comparison</h5>
         
-        <!-- Position markers -->
+        <!-- Position markers - CHANGED to -5 to +5 -->
         <div class="motif-position">
     """
     
-    # Add position markers
-    center_pos = len(primary_motif) // 2
-    for i in range(len(primary_motif)):
-        position = i - center_pos
-        html += f'<span>{position}</span>'
+    # CHANGED: Add position markers from -5 to +5 instead of -7 to +7
+    for i in range(-5, 6):
+        html += f'<span>{i}</span>'
     
     html += """
-        </div>
-        
-        <!-- Primary site motif -->
-        <div class="motif-row">
-            <div class="motif-label">{}</div>
-            <div class="motif-sequence">
-    """.format(primary_site_name)
-    
-    # Add primary motif
-    center_index = len(primary_motif) // 2
-    for i, aa in enumerate(primary_motif):
-        aa_class = get_aa_class(aa)
-        highlight = "highlighted" if i == center_index else aa_class
-        html += f'<div class="motif-aa {highlight}">{aa}</div>'
-    
-    html += """
-            </div>
         </div>
     """
     
+    # Helper function to get amino acid class for coloring
+    def get_aa_class(aa):
+        if aa == 'X':
+            return "aa-x"
+        elif aa in 'STY':
+            return "sty"
+        elif aa in 'NQ':
+            return "nq"
+        elif aa == 'C':
+            return "cys"
+        elif aa == 'P':
+            return "proline"
+        elif aa in 'AVILMFWG':
+            return "nonpolar"
+        elif aa in 'DE':
+            return "acidic"
+        elif aa in 'KRH':
+            return "basic"
+        else:
+            return "special"
+    
+    # Full standardization function for -7:+7 motifs
+    def standardize_motif(motif, site_position=None):
+        """
+        Standardize a phosphosite motif to have exactly 7 positions before and after
+        the phosphosite, with proper X padding.
+        
+        Args:
+            motif (str): The motif sequence
+            site_position (int, optional): The position of the site in the protein sequence
+            
+        Returns:
+            str: The standardized motif
+        """
+        # Find the center position (phosphosite)
+        center_pos = len(motif) // 2
+        
+        # Get the phosphosite and parts before/after
+        site_char = motif[center_pos]
+        before_site = motif[:center_pos]
+        after_site = motif[center_pos + 1:]
+        
+        # If we have the absolute site position
+        if site_position is not None:
+            # Calculate padding needed at beginning based on site position
+            aas_before = site_position - 1  # e.g., for S6, this is 5
+            padding_needed = max(0, 7 - aas_before)
+            
+            # Create the before part: add X padding at beginning if needed
+            if len(before_site) <= 7:
+                # If we have 7 or fewer residues, use all of them with padding
+                padded_before = "X" * padding_needed + before_site
+            else:
+                # If we have more than 7, take the last 7
+                padded_before = before_site[-7:]
+            
+            # Create the after part: take exactly 7 chars, NO padding at end
+            padded_after = after_site[:7]
+        else:
+            # Default behavior when we don't know the site position
+            # Ensure we have exactly 7 characters before
+            if len(before_site) < 7:
+                padded_before = "X" * (7 - len(before_site)) + before_site
+            else:
+                padded_before = before_site[-7:]
+            
+            # Ensure we have exactly 7 characters after, no padding unless needed
+            padded_after = after_site[:7]
+        
+        return padded_before + site_char + padded_after
+    
+    # NEW: Function to trim to just -5:+5 range
+    def trim_to_central_range(motif_str):
+        """Trim a standardized 15-char motif to just the central 11 positions (-5:+5)"""
+        # Assuming the motif is standardized to 15 chars with the phosphosite at position 7 (0-indexed)
+        # We want to keep positions 2-12 (0-indexed), which are -5 to +5 around the phosphosite
+        return motif_str[2:13]
+    
+    # Modified helper function to create HTML for a motif
+    def create_motif_html(motif, site_pos=None):
+        # First standardize motif to full 15 chars (7+1+7)
+        std_motif = standardize_motif(motif, site_pos)
+        
+        # Then trim to just -5:+5 range
+        trimmed_motif = trim_to_central_range(std_motif)
+        
+        # Create HTML for each amino acid in the trimmed motif
+        html = '<div class="motif-sequence" style="display: flex; flex-wrap: nowrap;">'
+        for i, aa in enumerate(trimmed_motif):
+            aa_class = get_aa_class(aa)
+            # Center position (phosphosite) is now at position 5 (0-indexed) in the trimmed motif
+            highlight_class = "highlighted" if i == 5 else aa_class
+            html += f'<div class="motif-aa {highlight_class}" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin: 0 1px; border-radius: 3px;">{aa}</div>'
+        html += '</div>'
+        return html
+    
+    # Add primary site motif with UniProt ID
+    html += f"""
+        <div class="motif-row">
+            <div class="motif-label">{primary_uniprot}_{primary_site_name}:</div>
+            {create_motif_html(primary_motif, primary_site_pos)}
+        </div>
+    """
+
     # Add match motifs
     for match in top_matches:
         motif = match.get('motif', '')
@@ -1164,21 +1283,22 @@ def create_comparative_motif_visualization(primary_site, matches):
         target_uniprot = match.get('target_uniprot', 'Unknown')
         rmsd = match.get('rmsd', 0.0)
         
+        # Extract site position from target_site if possible
+        target_site_pos = None
+        import re
+        site_match = re.match(r'([STY])(\d+)', target_site)
+        if site_match:
+            target_site_pos = int(site_match.group(2))
+        else:
+            # Try another pattern like just digits
+            site_match = re.match(r'(\d+)', target_site)
+            if site_match:
+                target_site_pos = int(site_match.group(1))
+        
         html += f"""
         <div class="motif-row">
-            <div class="motif-label">{target_site}</div>
-            <div class="motif-sequence">
-        """
-        
-        # Add match motif
-        center_index = len(motif) // 2
-        for i, aa in enumerate(motif):
-            aa_class = get_aa_class(aa)
-            highlight = "highlighted" if i == center_index else aa_class
-            html += f'<div class="motif-aa {highlight}">{aa}</div>'
-        
-        html += f"""
-            </div>
+            <div class="motif-label">{target_uniprot}_{target_site}:</div>
+            {create_motif_html(motif, target_site_pos)}
             <div class="match-info">
                 RMSD: {rmsd:.2f}Å | <a href="/site/{target_uniprot}/{target_site}" class="text-decoration-none">View site</a>
             </div>
@@ -1192,18 +1312,28 @@ def create_comparative_motif_visualization(primary_site, matches):
     return html
 
 
-def get_aa_class(aa):
-    """Helper function to classify amino acids by type."""
-    if aa in 'STYCNQ':
-        return 'polar'
-    elif aa in 'AVILMFWPG':
-        return 'nonpolar'
+def get_aa_bg_color(aa):
+    """Get the background color for an amino acid based on its type."""
+    if aa == 'X':
+        return "#e0e0e0"  # Light gray for placeholder X
+    elif aa in 'STY':
+        return "#bbdefb"  # Light blue for STY
+    elif aa in 'NQ':
+        return "#b39ddb"  # Light purple for NQ
+    elif aa == 'C':
+        return "#ffcc80"  # Light orange for Cysteine
+    elif aa == 'P':
+        return "#81c784"  # Light green for Proline
+    elif aa in 'AVILMFWG':
+        return "#ffecb3"  # Light yellow for other nonpolar
     elif aa in 'DE':
-        return 'acidic'
+        return "#ffcdd2"  # Light red for acidic
     elif aa in 'KRH':
-        return 'basic'
+        return "#c8e6c9"  # Pale green for basic
     else:
-        return 'special'
+        return "#e1bee7"  # Light pink for special cases
+
+
 
 
 def analyze_residue_distributions(structural_matches):
