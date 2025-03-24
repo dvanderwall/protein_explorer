@@ -223,10 +223,10 @@
     </nav>
 
     <div class="container my-5">
-        <!-- Protein Header and Structure Side-by-Side -->
+        <!-- Top section with side-by-side panels -->
         <div class="row mb-4">
             <!-- Protein Header Section -->
-            <div class="col-lg-4">
+            <div class="col-lg-6">
                 <div class="card h-100">
                     <div class="card-header bg-primary text-white">
                         <h4 class="mb-0">{{ site }} in {{ protein.get('gene_symbol', protein.get('uniprot_id')) }}</h4>
@@ -251,25 +251,6 @@
                 </div>
             </div>
             
-            <!-- Protein Structure Visualization Section -->
-            <div class="col-lg-8">
-                <div class="card h-100">
-                    <div class="card-header">
-                        <h5 class="mb-0">Protein Structure</h5>
-                    </div>
-                    <div class="card-body p-0 structure-viewer">
-                        {% if structure_html %}
-                            {{ structure_html|safe }}
-                        {% else %}
-                            <div class="alert alert-warning">Structure visualization not available.</div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Structural Context and Motif Comparison Side-by-Side -->
-        <div class="row mb-4">
             <!-- Structural Context Section -->
             <div class="col-lg-6">
                 {% if context_data %}
@@ -332,94 +313,28 @@
                 </div>
                 {% endif %}
             </div>
-            
-            <!-- Comparative Motif Visualization Section -->
-            <div class="col-lg-6">
-                <div class="card h-100">
+        </div>
+        
+        <!-- Full Protein Structure Visualization -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0">Motif Comparison</h5>
+                        <h5 class="mb-0">Protein Structure</h5>
                     </div>
-                    <div class="card-body">
-                        {% if motif_html %}
-                            {{ motif_html|safe }}  <!-- Add the |safe filter here -->
+                    <div class="card-body p-0 structure-viewer">
+                        {% if structure_html %}
+                            {{ structure_html|safe }}
                         {% else %}
-                            <div class="alert alert-info">No motif comparison data available.</div>
+                            <div class="alert alert-warning">Structure visualization not available.</div>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Network Visualization Section -->
-        {% if structural_matches and structural_matches|length > 0 %}
-        <div class="row">
-            <div class="col-12">
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Structural Similarity Network: {{ protein.get('uniprot_id') }}_{{ site }}</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-3">This network visualization shows structural relationships between phosphorylation sites. The queried site ({{ protein.get('uniprot_id') }}_{{ site }}) is shown in blue at the center, with matches connected by edges. Thicker edges indicate stronger structural similarity (lower RMSD).</p>
-                        
-                        <div id="network-container"></div>
-                        
-                        <script id="network-data" type="application/json">
-                            {{ structural_matches|tojson|safe if structural_matches else '[]' }}
-                        </script>
-
-
-                        <div class="mt-3">
-                            <div class="card">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0">Color Legend</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-flex flex-wrap justify-content-center">
-                                        <div class="mx-3 d-flex align-items-center mb-2">
-                                            <div style="width:16px; height:16px; background-color:#0d6efd; border-radius:50%; margin-right:5px;"></div>
-                                            <span>Query Site</span>
-                                        </div>
-                                        <div class="mx-3 d-flex align-items-center mb-2">
-                                            <div style="width:16px; height:16px; background-color:#4CAF50; border-radius:50%; margin-right:5px;"></div>
-                                            <span>High Similarity (RMSD &lt; 3.0 Å)</span>
-                                        </div>
-                                        <div class="mx-3 d-flex align-items-center mb-2">
-                                            <div style="width:16px; height:16px; background-color:#FF9800; border-radius:50%; margin-right:5px;"></div>
-                                            <span>Medium Similarity (RMSD 3.0-6.0 Å)</span>
-                                        </div>
-                                        <div class="mx-3 d-flex align-items-center mb-2">
-                                            <div style="width:16px; height:16px; background-color:#F44336; border-radius:50%; margin-right:5px;"></div>
-                                            <span>Low Similarity (RMSD &gt; 6.0 Å)</span>
-                                        </div>
-                                    </div>
-                                    <div class="mt-2">
-                                        <p class="small text-muted mb-0">
-                                            <i class="bi bi-info-circle me-1"></i> Edge thickness is inversely proportional to RMSD (thicker edges = more similar structures)
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- RMSD Filter -->
-                        <div class="mt-3">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h6>Filter by RMSD</h6>
-                                    <input type="range" class="form-range" id="rmsd-filter" min="0.5" max="10.0" step="0.1" value="10.0">
-                                    <div class="d-flex justify-content-between">
-                                        <small>0.5 Å</small>
-                                        <small>RMSD threshold: <span id="rmsd-value">10.0 Å</span></small>
-                                        <small>10.0 Å</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
+        <!-- Include Structural and Sequence sections through templates -->
+        {% include 'site_structural_section.html' %}
         
         <!-- Enhanced 3D Visualization -->
         <div class="row mt-4">
@@ -438,73 +353,7 @@
             </div>
         </div>
         
-        <!-- Residue Distribution Analysis - Optional, can be uncommented if needed -->
-        {% if distribution_data %}
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Residue Conservation Analysis</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6>Consensus Motif</h6>
-                                <div class="alert alert-info">
-                                    <code class="motif-sequence">{{ distribution_data.consensus }}</code>
-                                </div>
-                                <p class="small text-muted">Based on {{ distribution_data.motif_count }} structurally similar sites</p>
-                                
-                                {% if distribution_data.conserved %}
-                                <h6 class="mt-3">Conserved Positions</h6>
-                                <ul class="list-group">
-                                    {% for pos in distribution_data.conserved %}
-                                    <li class="list-group-item">
-                                        Position {{ pos.position }}: {{ pos.amino_acid }} ({{ pos.frequency|round }}% conserved)
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <h6>Residue Type Distribution</h6>
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th>Position</th>
-                                                <th>Polar</th>
-                                                <th>Non-polar</th>
-                                                <th>Acidic</th>
-                                                <th>Basic</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for counts in distribution_data.group_counts %}
-                                            <tr>
-                                                <td>{{ distribution_data.positions[loop.index0] }}</td>
-                                                <td>{{ counts.polar }}</td>
-                                                <td>{{ counts.nonpolar }}</td>
-                                                <td>{{ counts.acidic }}</td>
-                                                <td>{{ counts.basic }}</td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Sequence Similarity Section -->
-        <!-- Include the sequence_section.html template -->
         {% include 'site_sequence_section.html' %}
-
     </div>
 
     <!-- Footer -->
@@ -514,503 +363,25 @@
         </div>
     </footer>
 
+    <!-- Required JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Network Visualization Script - Keep this from the original template -->
-    <script>
-        // Network Visualization Script - Enhanced version
-        document.addEventListener('DOMContentLoaded', function() {
-            // Debugging helper
-            function debug(message, obj) {
-                console.log(`DEBUG: ${message}`, obj || '');
-            }
-            
-            debug("Starting network visualization");
-            
-            // Reset the network container completely
-            const networkContainer = document.getElementById('network-container');
-            if (!networkContainer) {
-                debug("Network container not found!");
-                return;
-            }
-            
-            // Get structural matches data from the template or from embedded script
-            let networkData = null;
-            const dataScript = document.getElementById('network-data');
-            if (dataScript) {
-                try {
-                    networkData = JSON.parse(dataScript.textContent);
-                    debug("Loaded network data from embedded script", networkData.length);
-                } catch (e) {
-                    debug("Error parsing embedded network data", e);
-                }
-            }
-            
-            // Fall back to template data if needed
-            if (!networkData) {
-                const structuralMatches = {{ structural_matches|tojson|safe if structural_matches else '[]' }};
-                debug("Structural matches count from template", structuralMatches.length);
-                networkData = structuralMatches;
-            }
-            
-            if (!networkData || networkData.length === 0) {
-                networkContainer.innerHTML = '<div class="alert alert-info">No structural matches available to display in network.</div>';
-                return;
-            }
-            
-            // Create a static information panel
-            const infoPanel = document.createElement('div');
-            infoPanel.className = 'node-info-panel';
-            infoPanel.style.position = 'absolute';
-            infoPanel.style.top = '10px';
-            infoPanel.style.right = '10px';
-            infoPanel.style.width = '250px';
-            infoPanel.style.backgroundColor = 'white';
-            infoPanel.style.border = '1px solid #ddd';
-            infoPanel.style.borderRadius = '5px';
-            infoPanel.style.padding = '10px';
-            infoPanel.style.boxShadow = '0 0 10px rgba(0,0,0,0.1)';
-            infoPanel.style.zIndex = '100';
-            infoPanel.style.fontSize = '0.9rem';
-            infoPanel.style.maxHeight = '380px';
-            infoPanel.style.overflowY = 'auto';
-            infoPanel.innerHTML = '<p class="text-center"><em>Hover over a node to see details</em></p>';
-            networkContainer.appendChild(infoPanel);
-            
-            // Create the SVG element
-            const svg = d3.select(networkContainer)
-                .append('svg')
-                .attr('width', '100%')
-                .attr('height', '100%')
-                .style('position', 'absolute')
-                .style('top', '0')
-                .style('left', '0')
-                .style('background-color', 'white');
-            
-            // Dimensions
-            const width = networkContainer.clientWidth;
-            const height = networkContainer.clientHeight;
-            
-            // Create a group to hold all the visualization elements
-            const g = svg.append("g");
-            
-            // Add zoom behavior
-            const zoom = d3.zoom()
-                .scaleExtent([0.2, 5])
-                .on("zoom", (event) => {
-                    g.attr("transform", event.transform);
-                });
-            
-            // Initialize the svg with zoom behavior
-            svg.call(zoom);
-            
-            // Prepare network data
-            const queryId = "{{ protein.get('uniprot_id') }}_{{ site }}";
-            const querySite = "{{ site }}";
-            
-            // Create nodes array
-            const nodes = [
-                {
-                    id: queryId,
-                    name: queryId,
-                    uniprot: "{{ protein.get('uniprot_id') }}",
-                    type: 'query',
-                    size: 12,
-                    plddt: "{{ site_data.mean_plddt }}",
-                    nearby_count: "{{ site_data.nearby_count }}",
-                    motif: "{{ site_data.motif }}"
-                }
-            ];
-            
-            // Create links array
-            const links = [];
-            
-            // Add target nodes, skip RMSD=0
-            networkData.forEach(match => {
-                // Skip nodes with RMSD=0
-                if (match.rmsd === 0) return;
-                
-                const nodeId = `${match.target_uniprot}_${match.target_site}`;
-                nodes.push({
-                    id: nodeId,
-                    name: nodeId,
-                    uniprot: match.target_uniprot,
-                    site: match.target_site,
-                    type: 'target',
-                    rmsd: match.rmsd,
-                    size: 8,
-                    plddt: match.plddt || 'N/A',
-                    nearby_count: match.nearby_count || 'N/A',
-                    motif: match.motif || 'N/A'
-                });
-                
-                // Create link
-                links.push({
-                    source: queryId,
-                    target: nodeId,
-                    rmsd: match.rmsd
-                });
-            });
-            
-            // Color and styling functions
-            function getNodeColor(d) {
-                if (d.type === 'query') return '#0d6efd'; // Blue for Query Node
-                if (d.rmsd < 3.0) return '#4CAF50'; // Green for RMSD < 3
-                if (d.rmsd <= 6.0) return '#FF9800'; // Orange for RMSD 3-6
-                return '#F44336'; // Red for RMSD > 6
-            }
-            
-            function getLinkColor(d) {
-                if (d.rmsd < 3.0) return '#4CAF50'; 
-                if (d.rmsd <= 6.0) return '#FF9800'; 
-                return '#F44336'; 
-            }
-            
-            function getLinkWidth(d) {
-                // Handle the RMSD = 0 case specifically
-                if (d.rmsd < .01) return 5; // Use a reasonable width for perfect matches
-                return Math.max(1, 3 / d.rmsd);
-            }
-            
-            // Force simulation
-            const simulation = d3.forceSimulation(nodes)
-                .force('link', d3.forceLink(links)
-                    .id(d => d.id)
-                    .distance(d => d.isInterNodeConnection ? 150 : 100))
-                .force('charge', d3.forceManyBody()
-                    .strength(d => d.type === 'query' ? -300 : -150))
-                .force('center', d3.forceCenter(width / 2, height / 2))
-                .force('collision', d3.forceCollide().radius(d => d.size + 10))
-                .force('x', d3.forceX(width / 2).strength(0.07))
-                .force('y', d3.forceY(height / 2).strength(0.07));
-            
-            // Create links
-            const link = g.append('g')
-                .selectAll('line')
-                .data(links)
-                .enter()
-                .append('line')
-                .attr('stroke', getLinkColor)
-                .attr('stroke-width', getLinkWidth)
-                .attr('stroke-opacity', 0.6);
-            
-            // Create nodes
-            const node = g.append('g')
-                .selectAll('circle')
-                .data(nodes)
-                .enter()
-                .append('circle')
-                .attr('r', d => d.type === 'query' ? 10 : 6)
-                .attr('fill', getNodeColor)
-                .attr('cursor', 'pointer')
-                .call(d3.drag()
-                    .on('start', dragstarted)
-                    .on('drag', dragged)
-                    .on('end', dragended));
-            
-            // Add labels to nodes
-            const label = g.append('g')
-                .selectAll('text')
-                .data(nodes)
-                .enter()
-                .append('text')
-                .attr('text-anchor', 'middle')
-                .attr('dy', d => d.size + 12)
-                .style('font-size', '9px')
-                .style('pointer-events', 'none')
-                .style('fill', '#333')
-                .style('font-family', 'Arial, sans-serif')
-                .text(d => d.id);
-            
-            // Function to update the info panel with node data
-            // Function to update the info panel with node data
-            function updateInfoPanel(d) {
-                debug("Updating info panel for node", d.id);
-                
-                let content = '';
-                if (d.type === 'query') {
-                    content = `
-                        <h6 class="border-bottom pb-2 mb-2">Query Node: ${d.id}</h6>
-                        <p><strong>UniProt ID:</strong> ${d.uniprot}</p>
-                        <p><strong>Mean pLDDT:</strong> ${d.plddt || 'N/A'}</p>
-                        <p><strong>Nearby Residues (10Å):</strong> ${d.nearby_count || 'N/A'}</p>
-                        ${d.motif ? `<p><strong>Motif:</strong> <code>${d.motif}</code></p>` : ''}
-                        <div class="d-grid gap-2">
-                            <a href="https://www.uniprot.org/uniprotkb/${d.uniprot}" class="btn btn-sm btn-outline-primary" target="_blank">View on UniProt</a>
-                            <a href="https://alphafold.ebi.ac.uk/entry/${d.uniprot}" class="btn btn-sm btn-outline-secondary" target="_blank">View on AlphaFold</a>
-                        </div>
-                    `;
-                } else {
-                    content = `
-                        <h6 class="border-bottom pb-2 mb-2">${d.id}</h6>
-                        <p><strong>UniProt ID:</strong> ${d.uniprot}</p>
-                        <p><strong>RMSD:</strong> ${d.rmsd.toFixed(2)} Å</p>
-                        <p><strong>Mean pLDDT:</strong> ${d.plddt || 'N/A'}</p>
-                        <p><strong>Nearby Residues (10Å):</strong> ${d.nearby_count || 'N/A'}</p>
-                        ${d.motif && d.motif !== 'N/A' ? `<p><strong>Motif:</strong> <code>${d.motif}</code></p>` : ''}
-                        <div class="d-grid gap-2">
-                            <a href="https://www.uniprot.org/uniprotkb/${d.uniprot}" class="btn btn-sm btn-outline-primary" target="_blank">View on UniProt</a>
-                            <a href="https://alphafold.ebi.ac.uk/entry/${d.uniprot}" class="btn btn-sm btn-outline-secondary" target="_blank">View on AlphaFold</a>
-                            <a href="/site/${d.uniprot}/${d.site}" class="btn btn-sm btn-primary">View Site</a>
-                        </div>
-                    `;
-                }
-                
-                infoPanel.innerHTML = content;
-            }
-            
-            // Node interaction handlers
-            node.on("mouseover", function(event, d) {
-                debug("Mouseover event", {
-                    nodeId: d.id, 
-                    eventType: event.type
-                });
-                
-                // Make the node appear larger
-                d3.select(this)
-                    .transition()
-                    .duration(200)
-                    .attr("r", d.type === 'query' ? 14 : 10);
-                    
-                // Update the info panel
-                updateInfoPanel(d);
-            })
-            .on("mouseout", function(event, d) {
-                debug("Mouseout event for node", d.id);
-                
-                // Return node to original size
-                d3.select(this)
-                    .transition()
-                    .duration(200)
-                    .attr("r", d.type === 'query' ? 10 : 6);
-            });
-            
-            // Update simulation on each tick
-            simulation.on('tick', () => {
-                link
-                    .attr('x1', d => d.source.x)
-                    .attr('y1', d => d.source.y)
-                    .attr('x2', d => d.target.x)
-                    .attr('y2', d => d.target.y);
-                
-                node
-                    .attr('cx', d => d.x)
-                    .attr('cy', d => d.y);
-                label
-                    .attr('x', d => d.x)
-                    .attr('y', d => d.y);
-            });
-            
-            // Drag functions
-            function dragstarted(event, d) {
-                debug("Drag started for node", d.id);
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
-            }
-            
-            function dragged(event, d) {
-                d.fx = event.x;
-                d.fy = event.y;
-            }
-            
-            function dragended(event, d) {
-                debug("Drag ended for node", d.id);
-                if (!event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
-            }
-            
-            // RMSD Filter functionality
-            const rmsdFilter = document.getElementById('rmsd-filter');
-            const rmsdValue = document.getElementById('rmsd-value');
-            
-            if (rmsdFilter && rmsdValue) {
-                rmsdFilter.addEventListener('input', function() {
-                    const threshold = parseFloat(this.value);
-                    rmsdValue.textContent = `${threshold.toFixed(1)} Å`;
-                    debug("RMSD filter changed", threshold);
-                    
-                    // Filter the network
-                    node.style('display', d => d.type === 'query' || d.rmsd <= threshold ? null : 'none');
-                    
-                    link.style('display', d => {
-                        const sourceVisible = d.source.type === 'query' || d.source.rmsd <= threshold;
-                        const targetVisible = d.target.type === 'query' || d.target.rmsd <= threshold;
-                        return sourceVisible && targetVisible ? null : 'none';
-                    });
-                    
-                    label.style('display', d => d.type === 'query' || d.rmsd <= threshold ? null : 'none');
-                    
-                    // Also filter the table rows
-                    const tableRows = document.querySelectorAll('.match-row');
-                    tableRows.forEach(row => {
-                        const rowRmsd = parseFloat(row.getAttribute('data-rmsd'));
-                        row.style.display = rowRmsd <= threshold ? '' : 'none';
-                        
-                        // Update color classes based on thresholds
-                        row.classList.remove('low-rmsd', 'medium-rmsd', 'high-rmsd');
-                        if (rowRmsd < 3.0) {
-                            row.classList.add('low-rmsd');
-                        } else if (rowRmsd <= 6.0) {
-                            row.classList.add('medium-rmsd');
-                        } else {
-                            row.classList.add('high-rmsd');
-                        }
-                    });
-                });
-            }
-            
-            // Update highlight buttons to work with the new visualization
-            document.querySelectorAll('.highlight-node').forEach(button => {
-                button.addEventListener('click', function() {
-                    const nodeId = this.getAttribute('data-node');
-                    debug("Highlight button clicked for node", nodeId);
-                    
-                    // Reset all nodes
-                    node.attr('stroke', null).attr('stroke-width', 0);
-                    link.attr('stroke-opacity', 0.6);
-                    
-                    // Find the node data
-                    const nodeData = nodes.find(n => n.id === nodeId);
-                    if (nodeData) {
-                        debug("Found node data for highlight", nodeData);
-                        updateInfoPanel(nodeData);
-                    }
-                    
-                    // Highlight the selected node
-                    node.filter(d => d.id === nodeId)
-                        .attr('stroke', '#000')
-                        .attr('stroke-width', 2);
-                    
-                    // Highlight connected links
-                    link.filter(d => d.source.id === nodeId || d.target.id === nodeId)
-                        .attr('stroke-opacity', 1);
-                });
-            });
-            
-            // Initial info panel content - show the query node info
-            const queryNode = nodes.find(n => n.type === 'query');
-            if (queryNode) {
-                updateInfoPanel(queryNode);
-            }
-            
-            debug("Network visualization setup complete");
-        });
-    </script>
+    <!-- Include the scripts for structural section -->
+    {% include 'structural_network_script.html' %}
     
-    <!-- Sequence Similarity Network Script -->
+    <!-- Include the scripts for sequence section -->
     {% include 'sequence_network_script.html' %}
     
     <!-- Additional script to ensure motifs are properly formatted -->
     <script>
-        // Tab-based formatting trigger - make sure motifs are formatted when tabs change
+        // Ensure motifs are formatted on page load with a delay to ensure DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-            // Tab-based formatting trigger - make sure motifs are formatted when tabs change
-            document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(button) {
-                button.addEventListener('shown.bs.tab', function() {
-                    // Small delay to ensure content is rendered
-                    setTimeout(formatMotifBlocks, 200);
-                });
-            });
-            
-            // Format motifs on page load with a delay to ensure DOM is ready
-            setTimeout(formatMotifBlocks, 300);
-            
-            function formatMotifBlocks() {
-                document.querySelectorAll('.motif-sequence:not(.formatted)').forEach(function(element) {
-                    // Skip elements already formatted or those containing formatted sub-elements
-                    if (element.classList.contains('formatted') || element.querySelector('.motif-aa')) {
-                        return;
-                    }
-                    
-                    // Get the motif text 
-                    const motifText = element.textContent.trim();
-                    if (!motifText || motifText.length < 7) return;
-                    
-                    // Only format strings that look like amino acid sequences
-                    if (!/^[ACDEFGHIKLMNPQRSTVWYX]+$/.test(motifText)) return;
-                    
-                    // Create a flex container
-                    const container = document.createElement('div');
-                    container.className = 'motif-flex-container';
-                    container.style.display = 'flex';
-                    container.style.flexWrap = 'nowrap';
-                    
-                    // Determine center position (phosphosite)
-                    const centerPos = Math.floor(motifText.length / 2);
-                    
-                    // Process each character in the motif
-                    for (let i = 0; i < motifText.length; i++) {
-                        const aa = motifText[i];
-                        const box = document.createElement('div');
-                        
-                        // Basic styling
-                        box.className = 'motif-aa';
-                        box.style.width = '24px';
-                        box.style.height = '24px';
-                        box.style.display = 'flex';
-                        box.style.alignItems = 'center';
-                        box.style.justifyContent = 'center';
-                        box.style.margin = '0 1px';
-                        box.style.borderRadius = '3px';
-                        box.textContent = aa;
-                        
-                        // Apply colors based on amino acid type
-                        if (i === centerPos) {
-                            // Phosphosite (center position)
-                            box.style.backgroundColor = '#ff5722';
-                            box.style.color = 'white';
-                            box.style.fontWeight = 'bold';
-                            box.classList.add('highlighted');
-                        } else if (aa === 'X') {
-                            // Placeholder X
-                            box.style.backgroundColor = '#e0e0e0';
-                            box.style.color = '#9e9e9e';
-                            box.classList.add('aa-x');
-                        } else if ('STY'.includes(aa)) {
-                            // STY group
-                            box.style.backgroundColor = '#bbdefb';
-                            box.classList.add('sty');
-                        } else if ('NQ'.includes(aa)) {
-                            // NQ group
-                            box.style.backgroundColor = '#b39ddb';
-                            box.classList.add('nq');
-                        } else if (aa === 'C') {
-                            // Cysteine
-                            box.style.backgroundColor = '#ffcc80';
-                            box.classList.add('cys');
-                        } else if (aa === 'P') {
-                            // Proline
-                            box.style.backgroundColor = '#81c784';
-                            box.classList.add('proline');
-                        } else if ('AVILMFWG'.includes(aa)) {
-                            // Other nonpolar
-                            box.style.backgroundColor = '#ffecb3';
-                            box.classList.add('nonpolar');
-                        } else if ('DE'.includes(aa)) {
-                            // Acidic
-                            box.style.backgroundColor = '#ffcdd2';
-                            box.classList.add('acidic');
-                        } else if ('KRH'.includes(aa)) {
-                            // Basic
-                            box.style.backgroundColor = '#c8e6c9';
-                            box.classList.add('basic');
-                        } else {
-                            // Special/other
-                            box.style.backgroundColor = '#e1bee7';
-                            box.classList.add('special');
-                        }
-                        
-                        container.appendChild(box);
-                    }
-                    
-                    // Replace the original content
-                    element.innerHTML = '';
-                    element.appendChild(container);
-                    element.classList.add('formatted');
-                });
-            }
+            setTimeout(function() {
+                // If any formatting functions exist, run them
+                if (typeof formatMotifBlocks === 'function') {
+                    formatMotifBlocks();
+                }
+            }, 300);
         });
     </script>
 </body>
