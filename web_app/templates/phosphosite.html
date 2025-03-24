@@ -37,6 +37,30 @@
         .high-rmsd {
             background-color: #f8d7da;
         }
+        /* Additional styles for tabs and visualization container */
+        .tab-content > .tab-pane {
+            display: none;
+        }
+        .tab-content > .active {
+            display: block;
+        }
+        /* Make the visualization container more noticeable during debugging */
+        #phosphosite-visualization-container {
+            min-height: 400px;
+            border: 1px dashed #ccc;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        #phosphosite-visualization-container::before {
+            content: "Visualization Container";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #aaa;
+            font-style: italic;
+            display: none; /* This will be hidden once content is loaded */
+        }
     </style>
 </head>
 <body>
@@ -122,6 +146,9 @@
             </div>
         </div>
 
+        <!-- Visualization Container -->
+        <div id="phosphosite-visualization-container"></div>
+
         <!-- Results Section -->
         {% if protein_info %}
         <div class="card mb-4">
@@ -147,49 +174,53 @@
 
         <!-- Phosphorylation Sites -->
         {% if phosphosites %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Potential Phosphorylation Sites</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover phosphosite-table">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Site</th>
-                                <th>Motif (-7 to +7)</th>
-                                <th>Mean pLDDT</th>
-                                <th>Nearby Residues (10Å)</th>
-                                <th>Known in PhosphositePlus</th>
-                                <th>Structural Matches</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for site in phosphosites %}
-                            <tr>
-                                <td>
-                                    <a href="/site/{{ protein_info.uniprot_id }}/{{ site.site }}" class="text-decoration-none">
-                                        <strong id="site-{{ site.resno }}">{{ site.site }}</strong>
-                                    </a>
-                                </td>
-                                <td><code class="motif-sequence">{{ site.motif }}</code></td>
-                                <td>{{ site.mean_plddt }}</td>
-                                <td>{{ site.nearby_count }}</td>
-                                <td>{{ "Yes" if site.is_known else "No" }}</td>
-                                <td>
-                                    {% if structural_matches and site.site in structural_matches %}
-                                        <span class="badge bg-success">{{ structural_matches[site.site]|length }} matches</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">No matches</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        {% if phosphosites_html %}
+            {{ phosphosites_html|safe }}
+        {% else %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Phosphorylation Site Analysis</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover phosphosite-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Site</th>
+                                    <th>Motif (-7 to +7)</th>
+                                    <th>Mean pLDDT</th>
+                                    <th>Nearby Residues (10Å)</th>
+                                    <th>Known in PhosphositePlus</th>
+                                    <th>Structural Matches</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for site in phosphosites %}
+                                <tr>
+                                    <td>
+                                        <a href="/site/{{ protein_info.uniprot_id }}/{{ site.site }}" class="text-decoration-none">
+                                            <strong id="site-{{ site.resno }}">{{ site.site }}</strong>
+                                        </a>
+                                    </td>
+                                    <td><code class="motif-sequence">{{ site.motif }}</code></td>
+                                    <td>{{ site.mean_plddt }}</td>
+                                    <td>{{ site.nearby_count }}</td>
+                                    <td>{{ "Yes" if site.is_known else "No" }}</td>
+                                    <td>
+                                        {% if structural_matches and site.site in structural_matches %}
+                                            <span class="badge bg-success">{{ structural_matches[site.site]|length }} matches</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No matches</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
         {% endif %}
 
         <!-- Structural Matches -->
@@ -249,47 +280,106 @@
         </div>
     </footer>
 
+    <!-- JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Bootstrap Tab Initialization -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const siteLinks = document.querySelectorAll('.site-link');
-            
-            // Only setup click handlers if we have site links
-            if (siteLinks.length > 0) {
-                siteLinks.forEach(function(link) {
-                    link.addEventListener('click', function(e) {
-                        const siteName = this.textContent.trim();
-                        
-                        // We need to check if protein_info exists server-side
-                        {% if protein_info is defined %}
-                        const uniprotId = '{{ protein_info.uniprot_id }}';
-                        // Navigate to the site detail page
-                        window.location.href = '/site/' + uniprotId + '/' + siteName;
-                        {% endif %}
-                        
-                        e.preventDefault();
+      document.addEventListener('DOMContentLoaded', function() {
+        // Explicitly initialize Bootstrap components
+        if (typeof bootstrap !== 'undefined') {
+          // Initialize tabs that might be created dynamically
+          const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+              if (mutation.addedNodes.length) {
+                mutation.addedNodes.forEach(function(node) {
+                  if (node.nodeType === 1) { // Only process Element nodes
+                    const tabs = node.querySelectorAll('[data-bs-toggle="tab"]');
+                    tabs.forEach(function(tab) {
+                      new bootstrap.Tab(tab);
                     });
+                  }
                 });
-            }
-        });
-        
-        // Toggle examples based on selected ID type
-        const idTypeSelector = document.getElementById('id_type');
-        if (idTypeSelector) {
-            idTypeSelector.addEventListener('change', function() {
-                const idType = this.value;
-                const uniprotExamples = document.querySelectorAll('.uniprot-example');
-                const geneExamples = document.querySelectorAll('.gene-example');
-                
-                if (idType === 'uniprot') {
-                    uniprotExamples.forEach(el => el.style.display = 'inline');
-                    geneExamples.forEach(el => el.style.display = 'none');
-                } else {
-                    uniprotExamples.forEach(el => el.style.display = 'none');
-                    geneExamples.forEach(el => el.style.display = 'inline');
-                }
+              }
             });
+          });
+          
+          observer.observe(document.body, { childList: true, subtree: true });
         }
+      });
     </script>
+    
+    <!-- Site Link Handling -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const siteLinks = document.querySelectorAll('.site-link');
+        
+        // Only setup click handlers if we have site links
+        if (siteLinks.length > 0) {
+          siteLinks.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+              const siteName = this.textContent.trim();
+              
+              // We need to check if protein_info exists server-side
+              {% if protein_info is defined %}
+              const uniprotId = '{{ protein_info.uniprot_id }}';
+              // Navigate to the site detail page
+              window.location.href = '/site/' + uniprotId + '/' + siteName;
+              {% endif %}
+              
+              e.preventDefault();
+            });
+          });
+        }
+      });
+      
+      // Toggle examples based on selected ID type
+      const idTypeSelector = document.getElementById('id_type');
+      if (idTypeSelector) {
+        idTypeSelector.addEventListener('change', function() {
+          const idType = this.value;
+          const uniprotExamples = document.querySelectorAll('.uniprot-example');
+          const geneExamples = document.querySelectorAll('.gene-example');
+          
+          if (idType === 'uniprot') {
+            uniprotExamples.forEach(el => el.style.display = 'inline');
+            geneExamples.forEach(el => el.style.display = 'none');
+          } else {
+            uniprotExamples.forEach(el => el.style.display = 'none');
+            geneExamples.forEach(el => el.style.display = 'inline');
+          }
+        });
+      }
+    </script>
+
+    <!-- Debugging Script -->
+    <script>
+      console.log('Page loaded, checking for visualization container...');
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM fully loaded');
+        console.log('Phosphosite container exists:', !!document.getElementById('phosphosite-visualization-container'));
+        console.log('Bootstrap version:', typeof bootstrap !== 'undefined' ? 'Loaded' : 'Not loaded');
+        console.log('Chart.js version:', typeof Chart !== 'undefined' ? 'Loaded' : 'Not loaded');
+      });
+    </script>
+    
+    <!-- Chart.js and Visualization Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    
+    <!-- Chart.js Verification -->
+    <script>
+      // Check if Chart.js loaded properly
+      if (typeof Chart === 'undefined') {
+        console.error('Chart.js failed to load! Trying to load it again...');
+      } else {
+        console.log('Chart.js successfully loaded');
+      }
+    </script>
+    
+    <!-- Main Visualization Script -->
+    <script src="{{ url_for('static', filename='js/phosphosite-visualization.js') }}"></script>
+    
+    
 </body>
 </html>

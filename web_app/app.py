@@ -217,31 +217,7 @@ def protein(identifier):
                             phosphosites = get_phosphosites(protein_data['uniprot_id'])
                             print(f"DEBUG: Found {len(phosphosites)} potential phosphorylation sites")
                             
-                            # Generate phosphosite HTML with enhanced data
-                            phosphosite_html = f"""
-                            <div class="card mt-4">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Phosphorylation Site Analysis</h5>
-                                </div>
-                                <div class="card-body p-0">
-                                    <div class="table-responsive">
-                                        <table class="table table-striped table-hover">
-                                            <thead class="thead-light">
-                                                <tr>
-                                                    <th>Site</th>
-                                                    <th>Motif (-7 to +7)</th>
-                                                    <th>Mean pLDDT</th>
-                                                    <th>Site pLDDT</th>
-                                                    <th>Nearby Residues (10Å)</th>
-                                                    <th>Surface Access.</th>
-                                                    <th>Known</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="phosphosite-table">
-                            """
-                            
-                            # Add rows for each phosphosite with enhanced data
+                            # Enhance phosphosites with additional metrics for visualization
                             for site in phosphosites:
                                 # Check for any additional supplementary data not already added
                                 if 'resno' in site:
@@ -251,136 +227,97 @@ def protein(identifier):
                                     if supp_data:
                                         # Add any supplementary fields not already present
                                         for key in ['surface_accessibility', 'site_plddt', 
-                                                   'polar_aa_percent', 'nonpolar_aa_percent', 
-                                                   'acidic_aa_percent', 'basic_aa_percent']:
+                                                'polar_aa_percent', 'nonpolar_aa_percent', 
+                                                'acidic_aa_percent', 'basic_aa_percent']:
                                             if key in supp_data and supp_data[key] is not None and key not in site:
                                                 site[key] = supp_data[key]
-                                
-                                # Build the HTML row with all available data
-                                surface_access = f"{site['surface_accessibility']:.1f}%" if 'surface_accessibility' in site else "N/A"
-                                site_plddt = f"{site['site_plddt']:.1f}" if 'site_plddt' in site else "N/A"
-                                
-                                phosphosite_html += f"""
-                                <tr>
-                                    <td><a href="/site/{protein_data['uniprot_id']}/{site['site']}" class="site-link" data-resno="{site['resno']}">{site['site']}</a></td>
-                                    <td><code class="motif-sequence">{site['motif']}</code></td>
-                                    <td>{site['mean_plddt']}</td>
-                                    <td>{site_plddt}</td>
-                                    <td>{site['nearby_count']}</td>
-                                    <td>{surface_access}</td>
-                                    <td>{"Yes" if site.get('is_known', False) else "No"}</td>
-                                    <td>
-                                        <a href="/site/{protein_data['uniprot_id']}/{site['site']}" class="btn btn-sm btn-outline-primary">
-                                            Details
-                                        </a>
-                                    </td>
-                                </tr>
-                                """
                             
-                            # Close the table
-                            phosphosite_html += """
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <script>
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    // Add click handlers to site links
-                                    const siteLinks = document.querySelectorAll('.site-link');
-                                    siteLinks.forEach(link => {
-                                        link.addEventListener('click', function(e) {
-                                            e.preventDefault();
-                                            const resno = this.getAttribute('data-resno');
-                                            
-                                            // Find the span in the sequence viewer
-                                            const sequenceSpans = document.querySelectorAll('.sequence-viewer span');
-                                            if (sequenceSpans.length > 0) {
-                                                // Find and click the span for this residue
-                                                const index = parseInt(resno) - 1;
-                                                if (index >= 0 && index < sequenceSpans.length) {
-                                                    sequenceSpans[index].click();
-                                                }
-                                            }
-                                        });
-                                    });
-                                });
-                            </script>
-                            """
+                            # Generate enhanced phosphosite HTML with the enhanced_table function
+                            from protein_explorer.analysis.enhanced_table import enhance_phosphosite_table
+                            phosphosite_html = enhance_phosphosite_table(phosphosites, protein_data['uniprot_id'])
                             
                         except Exception as e:
                             print(f"DEBUG: Error analyzing phosphosites: {e}")
+                            import traceback
+                            print(traceback.format_exc())
                             
                             # Fall back to basic analysis without supplementary data
                             phosphosites = pe.analysis.phospho.analyze_phosphosites(
                                 sequence, structure, uniprot_id=protein_data.get('uniprot_id')
                             )
                             
-                            # Generate phosphosite HTML with basic data (original version)
-                            phosphosite_html = f"""
-                            <div class="card mt-4">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Phosphorylation Site Analysis</h5>
-                                </div>
-                                <div class="card-body p-0">
-                                    <div class="table-responsive">
-                                        <table class="table table-striped table-hover">
-                                            <thead class="thead-light">
-                                                <tr>
-                                                    <th>Site</th>
-                                                    <th>Motif (-7 to +7)</th>
-                                                    <th>Mean pLDDT</th>
-                                                    <th>Nearby Residues (10Å)</th>
-                                                    <th>Known in PhosphositePlus</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="phosphosite-table">
-                            """
-                            
-                            # Add rows for each phosphosite with basic data
-                            for site in phosphosites:
-                                phosphosite_html += f"""
-                                <tr>
-                                    <td><a href="/site/{protein_data['uniprot_id']}/{site['site']}" class="site-link" data-resno="{site['resno']}">{site['site']}</a></td>
-                                    <td><code class="motif-sequence">{site['motif']}</code></td>
-                                    <td>{site['mean_plddt']}</td>
-                                    <td>{site['nearby_count']}</td>
-                                    <td>{"Yes" if site.get('is_known', False) else "No"}</td>
-                                </tr>
+                            # Use the enhanced table function even with basic data
+                            try:
+                                from protein_explorer.analysis.enhanced_table import enhance_phosphosite_table
+                                phosphosite_html = enhance_phosphosite_table(phosphosites, protein_data['uniprot_id'])
+                            except Exception as e2:
+                                print(f"DEBUG: Error using enhanced table: {e2}")
+                                # Fall back to original HTML generation if enhanced_table fails
+                                
+                                # Generate phosphosite HTML with basic data (original version)
+                                phosphosite_html = f"""
+                                <div class="card mt-4">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Phosphorylation Site Analysis</h5>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-hover">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th>Site</th>
+                                                        <th>Motif (-7 to +7)</th>
+                                                        <th>Mean pLDDT</th>
+                                                        <th>Nearby Residues (10Å)</th>
+                                                        <th>Known in PhosphositePlus</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="phosphosite-table">
                                 """
-                            
-                            # Close the table (original version)
-                            phosphosite_html += """
-                                            </tbody>
-                                        </table>
+                                
+                                # Add rows for each phosphosite with basic data
+                                for site in phosphosites:
+                                    phosphosite_html += f"""
+                                    <tr>
+                                        <td><a href="/site/{protein_data['uniprot_id']}/{site['site']}" class="site-link" data-resno="{site['resno']}">{site['site']}</a></td>
+                                        <td><code class="motif-sequence">{site['motif']}</code></td>
+                                        <td>{site['mean_plddt']}</td>
+                                        <td>{site['nearby_count']}</td>
+                                        <td>{"Yes" if site.get('is_known', False) else "No"}</td>
+                                    </tr>
+                                    """
+                                
+                                # Close the table (original version)
+                                phosphosite_html += """
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <script>
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    // Add click handlers to site links
-                                    const siteLinks = document.querySelectorAll('.site-link');
-                                    siteLinks.forEach(link => {
-                                        link.addEventListener('click', function(e) {
-                                            e.preventDefault();
-                                            const resno = this.getAttribute('data-resno');
-                                            
-                                            // Find the span in the sequence viewer
-                                            const sequenceSpans = document.querySelectorAll('.sequence-viewer span');
-                                            if (sequenceSpans.length > 0) {
-                                                // Find and click the span for this residue
-                                                const index = parseInt(resno) - 1;
-                                                if (index >= 0 && index < sequenceSpans.length) {
-                                                    sequenceSpans[index].click();
+                                
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        // Add click handlers to site links
+                                        const siteLinks = document.querySelectorAll('.site-link');
+                                        siteLinks.forEach(link => {
+                                            link.addEventListener('click', function(e) {
+                                                e.preventDefault();
+                                                const resno = this.getAttribute('data-resno');
+                                                
+                                                // Find the span in the sequence viewer
+                                                const sequenceSpans = document.querySelectorAll('.sequence-viewer span');
+                                                if (sequenceSpans.length > 0) {
+                                                    // Find and click the span for this residue
+                                                    const index = parseInt(resno) - 1;
+                                                    if (index >= 0 && index < sequenceSpans.length) {
+                                                        sequenceSpans[index].click();
+                                                    }
                                                 }
-                                            }
+                                            });
                                         });
                                     });
-                                });
-                            </script>
-                            """
+                                </script>
+                                """
             except Exception as e:
                 print(f"DEBUG: Error getting structure: {e}")
                 structure_html = f'<div class="alert alert-danger">Error loading structure: {str(e)}</div>'
@@ -604,6 +541,9 @@ def phosphosite_analysis():
         analyze_protein, get_phosphosite_data, enhance_phosphosite, enhance_structural_matches
     )
     
+    # Import enhanced table function
+    from protein_explorer.analysis.enhanced_table import enhance_phosphosite_table
+    
     # Initialize variables
     results = None
     error = None
@@ -624,10 +564,22 @@ def phosphosite_analysis():
             # Run the full analysis with supplementary data
             results = analyze_protein(identifier, id_type, parquet_file)
             
+            # Use enhanced table for the phosphosites
+            if results and 'phosphosites' in results and results['phosphosites']:
+                # Create enhanced HTML for the phosphosites
+                phosphosites_html = enhance_phosphosite_table(
+                    results['phosphosites'], 
+                    results['protein_info']['uniprot_id']
+                )
+                
+                # Add the HTML to the results
+                results['phosphosites_html'] = phosphosites_html
+            
             # Return results including enhanced data
             return render_template('phosphosite.html', 
                                   protein_info=results['protein_info'],
                                   phosphosites=results['phosphosites'],
+                                  phosphosites_html=results.get('phosphosites_html'),
                                   structural_matches=results['structural_matches'],
                                   error=results.get('error'))
                 
@@ -930,7 +882,7 @@ def site_detail(uniprot_id, site):
         logger.error(f"Error in site detail view: {e}")
         return render_template('error.html', error=str(e))
     
-    
+
 def analyze_motif(motif: str, site_type: str, site_number: int) -> Dict:
     """
     Analyze a phosphosite motif sequence for additional insights.
