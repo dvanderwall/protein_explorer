@@ -45,6 +45,16 @@ from protein_explorer.analysis.sequence_analyzer import (
     create_sequence_motif_visualization
 )
 
+from protein_explorer.analysis.kinase_predictor import (
+    load_kinase_scores, 
+    get_site_kinase_scores,
+    predict_kinases,
+    get_heatmap_data,
+    get_kinase_comparison_data,
+    get_known_kinase_info,
+    categorize_kinases_by_family
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -818,7 +828,7 @@ def site_detail(uniprot_id, site):
                 find_sequence_matches,
                 analyze_motif_conservation,
                 create_sequence_network_data,
-                create_sequence_motif_visualization  # Use the renamed function
+                create_sequence_motif_visualization
             )
             
             sequence_matches = find_sequence_matches(site_id, top_n=200, min_similarity=0.4)
@@ -858,6 +868,96 @@ def site_detail(uniprot_id, site):
             logger.error(traceback.format_exc())
             sequence_matches = []
         
+        # Add kinase prediction data
+        structure_kinase_data = {}
+        sequence_kinase_data = {}
+        
+        try:
+            # Generate site ID
+            site_id = f"{uniprot_id}_{site_number}"
+            
+            # Load structural kinase data
+            from protein_explorer.analysis.kinase_predictor import (
+                get_site_kinase_scores,
+                predict_kinases,
+                get_heatmap_data,
+                get_known_kinase_info,
+                categorize_kinases_by_family
+            )
+            
+            structure_scores = get_site_kinase_scores(site_id, 'structure')
+            if structure_scores and 'scores' in structure_scores:
+                # Get top kinases
+                top_kinases = predict_kinases(site_id, top_n=10, score_type='structure')
+                
+                # Get kinase families
+                kinase_families = categorize_kinases_by_family(top_kinases)
+                
+                # Get known kinase info
+                known_kinase = get_known_kinase_info(site_id, 'structure')
+                
+                # Prepare data for heatmap visualization
+                struct_match_ids = [f"{match['target_uniprot']}_{match['target_site'].replace('S', '').replace('T', '').replace('Y', '')}" 
+                                   for match in structural_matches[:20] if match.get('rmsd', 10) < 5.0]
+                struct_match_ids.insert(0, site_id)  # Add the query site first
+                
+                heatmap_data = get_heatmap_data(struct_match_ids, top_n=10, score_type='structure')
+                
+                # Bundle all data
+                structure_kinase_data = {
+                    'site_id': site_id,
+                    'top_kinases': top_kinases,
+                    'kinase_families': kinase_families,
+                    'known_kinase': known_kinase,
+                    'heatmap': heatmap_data
+                }
+            else:
+                logger.warning(f"No structural kinase scores available for {site_id}")
+        except Exception as e:
+            logger.error(f"Error processing structural kinase data: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+        
+        try:
+            # Generate site ID (same as above)
+            site_id = f"{uniprot_id}_{site_number}"
+            
+            # Load sequence kinase data
+            sequence_scores = get_site_kinase_scores(site_id, 'sequence')
+            if sequence_scores and 'scores' in sequence_scores:
+                # Get top kinases
+                top_kinases = predict_kinases(site_id, top_n=10, score_type='sequence')
+                
+                # Get kinase families
+                kinase_families = categorize_kinases_by_family(top_kinases)
+                
+                # Get known kinase info
+                known_kinase = get_known_kinase_info(site_id, 'sequence')
+                
+                # Prepare data for heatmap visualization
+                seq_match_ids = []
+                if sequence_matches:
+                    seq_match_ids = [match['target_id'] for match in sequence_matches[:20] 
+                                    if match.get('similarity', 0) > 0.6]
+                    seq_match_ids.insert(0, site_id)  # Add the query site first
+                
+                heatmap_data = get_heatmap_data(seq_match_ids, top_n=10, score_type='sequence')
+                
+                # Bundle all data
+                sequence_kinase_data = {
+                    'site_id': site_id,
+                    'top_kinases': top_kinases,
+                    'kinase_families': kinase_families,
+                    'known_kinase': known_kinase,
+                    'heatmap': heatmap_data
+                }
+            else:
+                logger.warning(f"No sequence kinase scores available for {site_id}")
+        except Exception as e:
+            logger.error(f"Error processing sequence kinase data: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+        
         # Render the template with all the data
         return render_template(
             'site.html',
@@ -872,11 +972,14 @@ def site_detail(uniprot_id, site):
             distribution_data=distribution_data,
             enhanced_3d_html=enhanced_3d_html,
             context_data=context_data,
-            # New variables for sequence similarity:
+            # Sequence similarity data:
             sequence_matches=sequence_matches,
             sequence_network_data=sequence_network_data,
             sequence_conservation=sequence_conservation,
-            sequence_motif_html=sequence_motif_html
+            sequence_motif_html=sequence_motif_html,
+            # Kinase prediction data:
+            structure_kinase_data=structure_kinase_data,
+            sequence_kinase_data=sequence_kinase_data
         )
     except Exception as e:
         logger.error(f"Error in site detail view: {e}")
@@ -1268,6 +1371,65 @@ def site_search():
     
     # GET request - show search form
     return render_template('site-search.html')
+
+# Add a new API endpoint for kinase data
+@app.route('/api/kinases/<site_id>', methods=['GET'])
+def api_kinases(site_id):
+    """API endpoint for kinase prediction scores."""
+    try:
+        score_type = request.args.get('type', 'structure')
+        top_n = int(request.args.get('top_n', 10))
+        
+        # Get kinase scores
+        scores = get_site_kinase_scores(site_id, score_type)
+        if not scores or 'scores' not in scores:
+            return jsonify({'error': f'No {score_type} kinase scores found for {site_id}'}), 404
+        
+        # Get top predicted kinases
+        top_kinases = predict_kinases(site_id, top_n, score_type)
+        
+        # Get known kinase info
+        known_kinase = get_known_kinase_info(site_id, score_type)
+        
+        # Get comparison with the other score type
+        other_type = 'sequence' if score_type == 'structure' else 'structure'
+        comparison = get_kinase_comparison_data(site_id, [score_type, other_type], top_n)
+        
+        # Return all data
+        return jsonify({
+            'site_id': site_id,
+            'score_type': score_type,
+            'known_kinase': known_kinase,
+            'top_kinases': top_kinases,
+            'comparison': comparison
+        })
+    except Exception as e:
+        logger.error(f"Error in kinase API: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Add another API endpoint for comparing kinases between sites
+@app.route('/api/kinases/compare', methods=['POST'])
+def api_compare_kinases():
+    """API endpoint for comparing kinase predictions across multiple sites."""
+    try:
+        data = request.get_json()
+        if not data or 'site_ids' not in data:
+            return jsonify({'error': 'Missing site_ids parameter'}), 400
+        
+        site_ids = data['site_ids']
+        score_type = data.get('type', 'structure')
+        top_n = int(data.get('top_n', 10))
+        
+        # Get heatmap data
+        heatmap_data = get_heatmap_data(site_ids, top_n, score_type)
+        
+        # Return the data
+        return jsonify({
+            'heatmap': heatmap_data
+        })
+    except Exception as e:
+        logger.error(f"Error in kinase comparison API: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/faq')
 def faq():

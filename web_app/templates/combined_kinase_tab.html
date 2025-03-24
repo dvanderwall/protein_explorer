@@ -1,0 +1,130 @@
+<!-- Combined Kinase Analysis Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Combined Kinase Analysis</h5>
+            </div>
+            <div class="card-body">
+                {% if structure_kinase_data and structure_kinase_data.top_kinases and 
+                      sequence_kinase_data and sequence_kinase_data.top_kinases %}
+                    <p class="mb-4">
+                        This analysis combines predictions from both structural and sequence-based methods
+                        to provide a more comprehensive view of potential kinases for this phosphorylation site.
+                    </p>
+                    
+                    <!-- Known Kinase Alert -->
+                    {% if (structure_kinase_data.known_kinase and structure_kinase_data.known_kinase.has_known_kinase) or
+                          (sequence_kinase_data.known_kinase and sequence_kinase_data.known_kinase.has_known_kinase) %}
+                        <div class="alert alert-success mb-4">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <strong>Known Kinase:</strong> This site is known to be phosphorylated by 
+                            <span class="badge bg-primary">
+                                {% if structure_kinase_data.known_kinase.has_known_kinase %}
+                                    {{ structure_kinase_data.known_kinase.kinase }}
+                                {% elif sequence_kinase_data.known_kinase.has_known_kinase %}
+                                    {{ sequence_kinase_data.known_kinase.kinase }}
+                                {% endif %}
+                            </span>
+                            according to PhosphositePlus database.
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row mb-4">
+                        <!-- Radar Chart Comparison -->
+                        <div class="col-lg-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Structure vs Sequence Comparison</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div style="height: 350px;">
+                                        <canvas id="kinase-comparison-chart"></canvas>
+                                    </div>
+                                    <p class="text-muted small mt-3">
+                                        This radar chart compares predictions from structural and sequence-based methods.
+                                        Kinases with high scores from both methods are more likely to be the true kinases.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Combined Kinase Table -->
+                        <div class="col-lg-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Top Combined Predictions</h6>
+                                </div>
+                                <div class="card-body" style="max-height: 350px; overflow-y: auto;">
+                                    <table class="table table-sm table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Kinase</th>
+                                                <th>Structure Score</th>
+                                                <th>Sequence Score</th>
+                                                <th>Combined</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="combined-kinase-table">
+                                            <!-- Table content will be filled by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Interpretation -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Interpretation</h6>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                <strong>How to interpret the predictions:</strong> 
+                                The most reliable predictions typically have high scores from both structural and sequence methods.
+                                Kinases with high structural scores but low sequence scores may recognize this site through
+                                structural features rather than specific sequence motifs, and vice versa.
+                            </p>
+                            
+                            <h6 class="mt-3">Understanding Kinase Groups:</h6>
+                            <div class="row mt-2">
+                                <div class="col-md-4">
+                                    <ul class="list-group list-group-flush small">
+                                        <li class="list-group-item"><strong>CDK Family:</strong> Cell cycle regulators (CDK1, CDK2, etc.)</li>
+                                        <li class="list-group-item"><strong>MAPK Family:</strong> Stress and growth responses (ERK, p38, JNK)</li>
+                                        <li class="list-group-item"><strong>CK Family:</strong> Constitutively active kinases (CK1, CK2)</li>
+                                        <li class="list-group-item"><strong>PKC Family:</strong> Calcium/lipid regulated kinases</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <ul class="list-group list-group-flush small">
+                                        <li class="list-group-item"><strong>PKA Family:</strong> cAMP-dependent kinases</li>
+                                        <li class="list-group-item"><strong>AKT Family:</strong> Growth and survival signals</li>
+                                        <li class="list-group-item"><strong>SRC Family:</strong> Non-receptor tyrosine kinases</li>
+                                        <li class="list-group-item"><strong>CAMK Family:</strong> Calcium/calmodulin-dependent kinases</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <ul class="list-group list-group-flush small">
+                                        <li class="list-group-item"><strong>ATM/ATR Family:</strong> DNA damage response kinases</li>
+                                        <li class="list-group-item"><strong>PLK Family:</strong> Cell cycle regulation, mitosis</li>
+                                        <li class="list-group-item"><strong>AURORA Family:</strong> Mitotic regulation</li>
+                                        <li class="list-group-item"><strong>GSK Family:</strong> Glycogen metabolism, Wnt signaling</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Insufficient kinase prediction data available for combined analysis. Please check the individual
+                        Structure and Sequence tabs for any available predictions.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

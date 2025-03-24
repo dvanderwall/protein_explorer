@@ -8,6 +8,14 @@
     <!-- Add D3.js and NGL libraries -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/arose/ngl@v2.0.0-dev.37/dist/ngl.js"></script>
+    <!-- Add Bootstrap icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    
+    <!-- Add Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    
+    <!-- Add kinase prediction JS -->
+    <script src="{{ url_for('static', filename='js/kinase_prediction.js') }}"></script>
     <style>
         /* Styling for the site page */
         .metadata-card {
@@ -371,6 +379,8 @@
     
     <!-- Include the scripts for sequence section -->
     {% include 'sequence_network_script.html' %}
+
+    {% include 'combined_kinase_tab.html' %}
     
     <!-- Additional script to ensure motifs are properly formatted -->
     <script>

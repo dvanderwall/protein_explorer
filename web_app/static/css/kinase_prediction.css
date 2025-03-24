@@ -1,0 +1,148 @@
+/* Kinase Prediction Visualization Styles */
+
+/* General chart container styling */
+.kinase-chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Heatmap styling */
+.kinase-heatmap {
+    width: 100%;
+    height: 400px;
+    position: relative;
+}
+
+.tooltip {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 8px;
+    font-size: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    pointer-events: none;
+    z-index: 10;
+    max-width: 200px;
+}
+
+/* Motif visualization styling */
+.motif-visualization {
+    display: flex;
+    margin-top: 10px;
+}
+
+.motif-position {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 2px;
+    font-family: monospace;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+.motif-polar {
+    background-color: #bbdefb;
+}
+
+.motif-basic {
+    background-color: #c8e6c9;
+}
+
+.motif-acidic {
+    background-color: #ffcdd2;
+}
+
+.motif-hydrophobic {
+    background-color: #ffecb3;
+}
+
+.motif-phospho {
+    background-color: #ff5722;
+    color: white;
+}
+
+.motif-proline {
+    background-color: #81c784;
+}
+
+.motif-any {
+    background-color: #e0e0e0;
+}
+
+/* Kinase family legend */
+.kinase-family-legend {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.family-item {
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
+    margin-bottom: 8px;
+}
+
+.family-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+/* Tabs styling */
+.kinase-tabs .nav-link.active {
+    font-weight: bold;
+    border-bottom: 3px solid #007bff;
+}
+
+/* Combined analysis styling */
+.combined-score-progress {
+    height: 8px;
+    width: 100%;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.confidence-high {
+    background-color: #28a745;
+}
+
+.confidence-medium {
+    background-color: #ffc107;
+}
+
+.confidence-low {
+    background-color: #dc3545;
+}
+
+/* Known kinase badge styling */
+.known-kinase-badge {
+    background-color: #007bff;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .kinase-chart-container {
+        height: 250px;
+    }
+    
+    .kinase-heatmap {
+        height: 300px;
+    }
+    
+    .motif-position {
+        width: 25px;
+        height: 25px;
+        font-size: 0.8rem;
+    }
+}

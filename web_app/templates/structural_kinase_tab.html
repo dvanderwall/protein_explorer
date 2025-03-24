@@ -1,0 +1,97 @@
+<!-- Kinase Prediction Tab -->
+<li class="nav-item" role="presentation">
+    <button class="nav-link" id="struct-kinase-tab" data-bs-toggle="tab" data-bs-target="#struct-kinase" 
+            type="button" role="tab" aria-controls="struct-kinase" aria-selected="false">Kinase Prediction</button>
+</li>
+
+<!-- Kinase Prediction Tab Content -->
+<div class="tab-pane fade" id="struct-kinase" role="tabpanel" aria-labelledby="struct-kinase-tab">
+    {% if structure_kinase_data and structure_kinase_data.top_kinases %}
+        <!-- Known Kinase Alert (if available) -->
+        {% if structure_kinase_data.known_kinase and structure_kinase_data.known_kinase.has_known_kinase %}
+            <div class="alert alert-success mb-4">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>Known Kinase:</strong> This site is known to be phosphorylated by 
+                <span class="badge bg-primary">{{ structure_kinase_data.known_kinase.kinase }}</span>
+                according to PhosphositePlus database.
+            </div>
+        {% endif %}
+
+        <div class="row mb-4">
+            <!-- Top Kinases Bar Chart -->
+            <div class="col-lg-8">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">Top Predicted Kinases (Structure-Based)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 300px;">
+                            <canvas id="struct-kinase-chart"></canvas>
+                        </div>
+                        <p class="text-muted small mt-3">
+                            Structure-based kinase predictions are calculated by comparing the 3D structure
+                            of this phosphosite to known kinase-substrate structures. Higher scores indicate
+                            stronger confidence in the prediction.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kinase Family Distribution -->
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">Kinase Family Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 300px;">
+                            <canvas id="struct-kinase-family-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kinase Recognition Motifs -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Kinase Recognition Motifs</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">
+                    Each kinase recognizes specific amino acid patterns (motifs) around the phosphorylation site.
+                    Below are the consensus motifs for the top predicted kinases:
+                </p>
+                <div id="struct-motif-analysis">
+                    <!-- Motif analysis will be filled by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Heatmap Visualization -->
+        {% if structure_kinase_data.heatmap and structure_kinase_data.heatmap.sites %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Kinase Prediction Heatmap</h6>
+                </div>
+                <div class="card-body">
+                    <p>
+                        This heatmap shows kinase prediction scores across structurally similar sites.
+                        Common patterns may indicate conserved kinase recognition.
+                    </p>
+                    <div id="struct-kinase-heatmap" style="height: 400px;"></div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Hidden kinase data for JavaScript to use -->
+        <script id="struct-kinase-data" type="application/json">
+            {{ structure_kinase_data|tojson|safe }}
+        </script>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            No structural kinase prediction data available for this site.
+        </div>
+    {% endif %}
+</div>
