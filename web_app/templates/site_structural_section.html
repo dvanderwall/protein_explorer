@@ -37,7 +37,7 @@
                             The queried site ({{ protein.get('uniprot_id') }}_{{ site }}) is shown in blue at the center, with matches 
                             connected by edges. Thicker edges indicate stronger structural similarity (lower RMSD).</p>
                             
-                            <div id="network-container"></div>
+                            <div id="network-container" style="height: 500px; width: 100%; position: relative;"></div>
                             
                             <script id="network-data" type="application/json">
                                 {{ structural_matches|tojson|safe if structural_matches else '[]' }}

@@ -384,5 +384,84 @@
             }, 300);
         });
     </script>
+
+    <script>
+        // Initialize all tabs when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Log what we find for debugging
+            console.log("Initializing tabs");
+            console.log("Structural tab buttons found:", document.querySelectorAll('#structuralTab button').length);
+            
+            // Try using Bootstrap's native API
+            const structuralTabEl = document.querySelector('#structuralTab button[data-bs-target="#struct-network"]');
+            if (structuralTabEl) {
+                console.log("Found first structural tab, initializing");
+                const structuralTab = new bootstrap.Tab(structuralTabEl);
+                structuralTab.show(); // Explicitly show the first tab
+            } else {
+                console.error("Could not find first structural tab");
+            }
+            
+            // Add direct event listeners for click
+            document.querySelectorAll('#structuralTab button').forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    console.log("Structural tab clicked:", this.getAttribute('data-bs-target'));
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('data-bs-target'));
+                    if (target) {
+                        // Hide all structural tab panes
+                        document.querySelectorAll('#structuralTabContent .tab-pane').forEach(function(pane) {
+                            pane.classList.remove('active', 'show');
+                        });
+                        // Show this one
+                        target.classList.add('active', 'show');
+                        
+                        // Update active state on tabs
+                        document.querySelectorAll('#structuralTab button').forEach(function(btn) {
+                            btn.classList.remove('active');
+                            btn.setAttribute('aria-selected', 'false');
+                        });
+                        this.classList.add('active');
+                        this.setAttribute('aria-selected', 'true');
+                        
+                        // Trigger resize for visualizations
+                        window.dispatchEvent(new Event('resize'));
+                    } else {
+                        console.error("Target not found:", this.getAttribute('data-bs-target'));
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM loaded");
+            
+            // Check tab elements
+            console.log("Structural tabs:", 
+                        document.querySelectorAll('#structuralTab button').length);
+            console.log("Sequence tabs:", 
+                        document.querySelectorAll('#sequenceTab button').length);
+            
+            // Check content panes
+            console.log("Structural tab panes:", 
+                        document.querySelectorAll('#structuralTabContent .tab-pane').length);
+            console.log("Sequence tab panes:", 
+                        document.querySelectorAll('#sequenceTabContent .tab-pane').length);
+            
+            // Check if specific tab elements exist
+            console.log("Network container exists:", 
+                        !!document.getElementById('network-container'));
+            console.log("Sequence network container exists:", 
+                        !!document.getElementById('sequence-network-container'));
+            
+            // Check data availability
+            console.log("Network data script exists:", 
+                        !!document.getElementById('network-data'));
+            console.log("Sequence network data script exists:", 
+                        !!document.getElementById('sequence-network-data'));
+        });
+    </script>
 </body>
 </html>
