@@ -1,0 +1,267 @@
+<!-- Sequence Network Visualization Script -->
+<script>
+    // Sequence Network Visualization
+    document.addEventListener('DOMContentLoaded', function() {
+        // Only run if the sequence network container exists
+        const sequenceNetworkContainer = document.getElementById('sequence-network-container');
+        if (!sequenceNetworkContainer) {
+            console.log("Sequence network container not found");
+            return;
+        }
+        
+        console.log("Initializing sequence network visualization");
+        
+        // Reset the network container completely
+        sequenceNetworkContainer.innerHTML = '';
+        
+        // Get network data from embedded script
+        let networkData = null;
+        const dataScript = document.getElementById('sequence-network-data');
+        if (dataScript) {
+            try {
+                networkData = JSON.parse(dataScript.textContent);
+                console.log("Loaded sequence network data", networkData);
+            } catch (e) {
+                console.error("Error parsing sequence network data", e);
+            }
+        }
+        
+        if (!networkData || !networkData.nodes || networkData.nodes.length === 0) {
+            sequenceNetworkContainer.innerHTML = '<div class="alert alert-info">No sequence network data available.</div>';
+            return;
+        }
+        
+        // Create a static information panel
+        const infoPanel = document.createElement('div');
+        infoPanel.className = 'node-info-panel';
+        infoPanel.style.position = 'absolute';
+        infoPanel.style.top = '10px';
+        infoPanel.style.right = '10px';
+        infoPanel.style.width = '250px';
+        infoPanel.style.backgroundColor = 'white';
+        infoPanel.style.border = '1px solid #ddd';
+        infoPanel.style.borderRadius = '5px';
+        infoPanel.style.padding = '10px';
+        infoPanel.style.boxShadow = '0 0 10px rgba(0,0,0,0.1)';
+        infoPanel.style.zIndex = '100';
+        infoPanel.style.fontSize = '0.9rem';
+        infoPanel.style.maxHeight = '380px';
+        infoPanel.style.overflowY = 'auto';
+        infoPanel.innerHTML = '<p class="text-center"><em>Hover over a node to see details</em></p>';
+        sequenceNetworkContainer.appendChild(infoPanel);
+        
+        // Create the SVG element
+        const svg = d3.select(sequenceNetworkContainer)
+            .append('svg')
+            .attr('width', '100%')
+            .attr('height', '100%')
+            .style('position', 'absolute')
+            .style('top', '0')
+            .style('left', '0')
+            .style('background-color', 'white');
+        
+        // Dimensions
+        const width = sequenceNetworkContainer.clientWidth;
+        const height = sequenceNetworkContainer.clientHeight;
+        
+        // Create a group to hold all the visualization elements
+        const g = svg.append("g");
+        
+        // Add zoom behavior
+        const zoom = d3.zoom()
+            .scaleExtent([0.2, 5])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            });
+        
+        // Initialize the svg with zoom behavior
+        svg.call(zoom);
+        
+        // Color functions
+        function getNodeColor(d) {
+            if (d.type === 'query') return '#198754'; // Green for Query Node
+            if (d.similarity >= 0.8) return '#28a745'; // Green for high similarity
+            if (d.similarity >= 0.6) return '#ffc107'; // Yellow for medium similarity
+            return '#dc3545'; // Red for low similarity
+        }
+        
+        function getLinkColor(d) {
+            if (d.similarity >= 0.8) return '#28a745'; 
+            if (d.similarity >= 0.6) return '#ffc107'; 
+            return '#dc3545'; 
+        }
+        
+        function getLinkWidth(d) {
+            // Scale the link width based on similarity
+            return Math.max(1, d.similarity * 5);
+        }
+        
+        // Force simulation
+        const simulation = d3.forceSimulation(networkData.nodes)
+            .force('link', d3.forceLink(networkData.links)
+                .id(d => d.id)
+                .distance(d => 100 * (1 - d.similarity)))  // Higher similarity = closer together
+            .force('charge', d3.forceManyBody()
+                .strength(d => d.type === 'query' ? -300 : -150))
+            .force('center', d3.forceCenter(width / 2, height / 2))
+            .force('collision', d3.forceCollide().radius(d => d.size + 10))
+            .force('x', d3.forceX(width / 2).strength(0.07))
+            .force('y', d3.forceY(height / 2).strength(0.07));
+        
+        // Create links
+        const link = g.append('g')
+            .selectAll('line')
+            .data(networkData.links)
+            .enter()
+            .append('line')
+            .attr('stroke', getLinkColor)
+            .attr('stroke-width', getLinkWidth)
+            .attr('stroke-opacity', 0.6);
+        
+        // Create nodes
+        const node = g.append('g')
+            .selectAll('circle')
+            .data(networkData.nodes)
+            .enter()
+            .append('circle')
+            .attr('r', d => d.type === 'query' ? 10 : 6)
+            .attr('fill', getNodeColor)
+            .attr('cursor', 'pointer')
+            .call(d3.drag()
+                .on('start', dragstarted)
+                .on('drag', dragged)
+                .on('end', dragended));
+        
+        // Add labels to nodes - FIXED to show UniProt ID and site
+        const label = g.append('g')
+            .selectAll('text')
+            .data(networkData.nodes)
+            .enter()
+            .append('text')
+            .attr('text-anchor', 'middle')
+            .attr('dy', d => d.size + 12)
+            .style('font-size', '9px')
+            .style('pointer-events', 'none')
+            .style('fill', '#333')
+            .style('font-family', 'Arial, sans-serif')
+            .text(d => d.display_name || (d.uniprot + '_' + d.name));
+        
+        // Function to update the info panel with node data
+        function updateInfoPanel(d) {
+            let content = '';
+            if (d.type === 'query') {
+                content = `
+                    <h6 class="border-bottom pb-2 mb-2">Query Node: ${d.uniprot}_${d.name}</h6>
+                    <p><strong>UniProt ID:</strong> ${d.uniprot}</p>
+                    ${d.motif ? `<p><strong>Motif:</strong> <code>${d.motif}</code></p>` : ''}
+                    <div class="d-grid gap-2">
+                        <a href="https://www.uniprot.org/uniprotkb/${d.uniprot}" class="btn btn-sm btn-outline-primary" target="_blank">View on UniProt</a>
+                        <a href="https://alphafold.ebi.ac.uk/entry/${d.uniprot}" class="btn btn-sm btn-outline-secondary" target="_blank">View on AlphaFold</a>
+                    </div>
+                `;
+            } else {
+                content = `
+                    <h6 class="border-bottom pb-2 mb-2">${d.uniprot}_${d.name}</h6>
+                    <p><strong>UniProt ID:</strong> ${d.uniprot}</p>
+                    <p><strong>Similarity:</strong> ${(d.similarity * 100).toFixed(1)}%</p>
+                    ${d.motif ? `<p><strong>Motif:</strong> <code>${d.motif}</code></p>` : ''}
+                    <div class="d-grid gap-2">
+                        <a href="https://www.uniprot.org/uniprotkb/${d.uniprot}" class="btn btn-sm btn-outline-primary" target="_blank">View on UniProt</a>
+                        <a href="https://alphafold.ebi.ac.uk/entry/${d.uniprot}" class="btn btn-sm btn-outline-secondary" target="_blank">View on AlphaFold</a>
+                        <a href="/site/${d.uniprot}/${d.name}" class="btn btn-sm btn-primary">View Site</a>
+                    </div>
+                `;
+            }
+            
+            infoPanel.innerHTML = content;
+        }
+        
+        // Node interaction handlers
+        node.on("mouseover", function(event, d) {
+            // Make the node appear larger
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("r", d.type === 'query' ? 14 : 10);
+                
+            // Update the info panel
+            updateInfoPanel(d);
+        })
+        .on("mouseout", function(event, d) {
+            // Return node to original size
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("r", d.type === 'query' ? 10 : 6);
+        });
+        
+        // Update simulation on each tick
+        simulation.on('tick', () => {
+            link
+                .attr('x1', d => d.source.x)
+                .attr('y1', d => d.source.y)
+                .attr('x2', d => d.target.x)
+                .attr('y2', d => d.target.y);
+            
+            node
+                .attr('cx', d => d.x)
+                .attr('cy', d => d.y);
+            label
+                .attr('x', d => d.x)
+                .attr('y', d => d.y);
+        });
+        
+        // Drag functions
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+        
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+        
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+        
+        // Similarity Filter functionality
+        const similarityFilter = document.getElementById('seq-similarity-filter');
+        const similarityValue = document.getElementById('similarity-value');
+        
+        if (similarityFilter && similarityValue) {
+            similarityFilter.addEventListener('input', function() {
+                const threshold = parseFloat(this.value);
+                similarityValue.textContent = threshold.toFixed(2);
+                
+                // Filter the network
+                node.style('display', d => d.type === 'query' || d.similarity >= threshold ? null : 'none');
+                
+                link.style('display', d => {
+                    const sourceVisible = d.source.type === 'query' || d.source.similarity >= threshold;
+                    const targetVisible = d.target.type === 'query' || d.target.similarity >= threshold;
+                    return sourceVisible && targetVisible ? null : 'none';
+                });
+                
+                label.style('display', d => d.type === 'query' || d.similarity >= threshold ? null : 'none');
+                
+                // Also filter the table rows
+                const tableRows = document.querySelectorAll('.seq-match-row');
+                tableRows.forEach(row => {
+                    const rowSimilarity = parseFloat(row.getAttribute('data-similarity'));
+                    row.style.display = rowSimilarity >= threshold ? '' : 'none';
+                });
+            });
+        }
+        
+        // Initial info panel content - show the query node info
+        const queryNode = networkData.nodes.find(n => n.type === 'query');
+        if (queryNode) {
+            updateInfoPanel(queryNode);
+        }
+    });
+    </script>

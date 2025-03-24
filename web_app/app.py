@@ -36,6 +36,15 @@ from protein_explorer.analysis.phospho_analyzer import (
 # Import visualization functions
 from protein_explorer.visualization.network import create_phosphosite_network
 
+from protein_explorer.analysis.sequence_analyzer import (
+    preload_sequence_data,
+    find_sequence_matches,
+    analyze_motif_conservation,
+    create_sequence_network_data,
+    get_motif_enrichment,
+    create_sequence_motif_visualization
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,6 +64,12 @@ try:
         preload_structural_data(parquet_file)
     
     print("Structural similarity data preloaded successfully")
+
+    print("Preloading sequence similarity data...")
+    seq_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 
+                         'Sequence_Similarity_Edges.parquet')
+    preload_sequence_data(seq_file)
+    print("Sequence similarity data preloaded successfully")
 except Exception as e:
     print(f"Warning: Failed to preload structural similarity data: {e}")
     print("Data will be loaded on first request (may cause delay)")
@@ -624,6 +639,98 @@ def phosphosite_analysis():
     # GET request - show empty form
     return render_template('phosphosite.html')
 
+# Add this to app.py
+@app.route('/api/sequence_matches/<site_id>', methods=['GET'])
+def api_sequence_matches(site_id):
+    """API endpoint for sequence similarity matches."""
+    try:
+        # Get query parameters
+        top_n = request.args.get('top_n', default=100, type=int)
+        min_similarity = request.args.get('min_similarity', default=0.4, type=float)
+        
+        # Validate site_id format (e.g., UniProtID_ResidueNumber)
+        if '_' not in site_id:
+            return jsonify({'error': 'Invalid site ID format. Expected: UniProtID_ResidueNumber'}), 400
+            
+        # Get sequence matches
+        matches = find_sequence_matches(site_id, top_n=top_n, min_similarity=min_similarity)
+        
+        # If no matches, return empty list with a message
+        if not matches:
+            return jsonify({
+                'matches': [],
+                'count': 0,
+                'message': f'No sequence similarity matches found for {site_id}'
+            })
+        
+        # Create a complete response with metadata
+        response = {
+            'site_id': site_id,
+            'matches': matches,
+            'count': len(matches),
+            'params': {
+                'top_n': top_n,
+                'min_similarity': min_similarity
+            }
+        }
+        
+        return jsonify(response)
+    except Exception as e:
+        logger.error(f"Error in sequence matches API: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/sequence_conservation/<site_id>', methods=['GET'])
+def api_sequence_conservation(site_id):
+    """API endpoint for sequence conservation analysis."""
+    try:
+        # Get query parameters
+        top_n = request.args.get('top_n', default=200, type=int)
+        min_similarity = request.args.get('min_similarity', default=0.4, type=float)
+        
+        # Get the query motif if possible
+        query_motif = None
+        
+        # Parse site_id to extract uniprot_id and site_number
+        parts = site_id.split('_')
+        if len(parts) >= 2:
+            uniprot_id = parts[0]
+            site_number = int(parts[1])
+            
+            # Try to get site data with motif
+            try:
+                # Get all sites for the protein
+                from protein_explorer.analysis.phospho_analyzer import get_phosphosites
+                sites = get_phosphosites(uniprot_id)
+                
+                # Find the specific site
+                for site in sites:
+                    if site['resno'] == site_number:
+                        query_motif = site.get('motif')
+                        break
+            except:
+                # If that fails, try direct motif lookup
+                pass
+        
+        # Get sequence matches
+        matches = find_sequence_matches(site_id, top_n=top_n, min_similarity=min_similarity)
+        
+        # Analyze conservation
+        conservation = analyze_motif_conservation(matches, query_motif=query_motif)
+        
+        # Add metadata to response
+        response = {
+            'site_id': site_id,
+            'analysis': conservation,
+            'match_count': len(matches),
+            'query_motif': query_motif
+        }
+        
+        return jsonify(response)
+    except Exception as e:
+        logger.error(f"Error in sequence conservation API: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/site/<uniprot_id>/<site>')
 def site_detail(uniprot_id, site):
     """Display detailed information about a specific phosphorylation site with enhanced supplementary data."""
@@ -744,6 +851,61 @@ def site_detail(uniprot_id, site):
             logger.error(f"Error analyzing structural context: {e}")
             context_data = None
         
+        # Find sequence similarity matches
+        sequence_matches = []
+        sequence_network_data = None
+        sequence_conservation = None
+        sequence_motif_html = None
+        
+        try:
+            # Get sequence similarity matches
+            site_id = f"{uniprot_id}_{site_number}"
+            logger.info(f"Finding sequence matches for {site_id}")
+            
+            from protein_explorer.analysis.sequence_analyzer import (
+                find_sequence_matches,
+                analyze_motif_conservation,
+                create_sequence_network_data,
+                create_sequence_motif_visualization  # Use the renamed function
+            )
+            
+            sequence_matches = find_sequence_matches(site_id, top_n=200, min_similarity=0.4)
+            logger.info(f"Found {len(sequence_matches)} sequence matches")
+            
+            # Log a sample of the matches to see what they contain
+            if sequence_matches:
+                logger.info(f"Sample match: {sequence_matches[0]}")
+                
+                # Create sequence network data
+                sequence_network_data = create_sequence_network_data(
+                    site_id, 
+                    sequence_matches,
+                    query_motif=site_data.get('motif')
+                )
+                logger.info(f"Created network data with {len(sequence_network_data['nodes'])} nodes")
+                
+                # Create sequence conservation analysis
+                sequence_conservation = analyze_motif_conservation(
+                    sequence_matches,
+                    query_motif=site_data.get('motif')
+                )
+                logger.info(f"Created conservation analysis with {sequence_conservation['motif_count']} motifs")
+                
+                # Create sequence motif visualization
+                sequence_motif_html = create_sequence_motif_visualization(
+                    site_id,
+                    site_data.get('motif', ''),
+                    sequence_matches
+                )
+                logger.info(f"Created motif visualization HTML of length {len(sequence_motif_html) if sequence_motif_html else 0}")
+            else:
+                logger.warning(f"No sequence matches found for {site_id}")
+        except Exception as e:
+            logger.error(f"Error analyzing sequence similarity: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            sequence_matches = []
+        
         # Render the template with all the data
         return render_template(
             'site.html',
@@ -757,7 +919,12 @@ def site_detail(uniprot_id, site):
             motif_html=motif_html,
             distribution_data=distribution_data,
             enhanced_3d_html=enhanced_3d_html,
-            context_data=context_data
+            context_data=context_data,
+            # New variables for sequence similarity:
+            sequence_matches=sequence_matches,
+            sequence_network_data=sequence_network_data,
+            sequence_conservation=sequence_conservation,
+            sequence_motif_html=sequence_motif_html
         )
     except Exception as e:
         logger.error(f"Error in site detail view: {e}")

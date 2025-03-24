@@ -62,6 +62,10 @@ def save_to_cache(filename, data):
         return False
 
 
+###################################################################################################################
+### CAN SOMEONE TAKE THE STRUCTURAL SIMILARITY DATABASE AND SET UP MONGODB/SEQUEL DATABASE FOR PROTEIN EXPLORER ###
+##################################### CONSIDER MONGODB INTEGRATION ################################################
+###################################################################################################################
 def load_from_cache(filename):
     """
     Load data from the cache file.
@@ -345,7 +349,9 @@ def get_alphafold_structure(uniprot_id: str) -> Optional[str]:
         return None
     
 
-
+###################################################################################################################
+#################### STRINGS DATABASE BIOPLEX? ####################################################################
+###################################################################################################################
 def get_protein_interactions(uniprot_id: str, 
                            confidence_score: float = 0.7, 
                            limit: int = 100,

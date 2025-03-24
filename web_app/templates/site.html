@@ -101,6 +101,92 @@
             font-family: sans-serif;
             pointer-events: none;
         }
+        
+        /* Styles for sequence similarity visualization */
+        .motif-comparison {
+            font-family: monospace;
+            margin-bottom: 20px;
+        }
+        .motif-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .motif-label {
+            width: 130px;
+            font-weight: bold;
+            text-align: right;
+            padding-right: 10px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .motif-sequence {
+            display: flex;
+        }
+        .motif-aa {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 1px;
+            border-radius: 3px;
+        }
+        .motif-aa.highlighted {
+            background-color: #ff5722;
+            color: white;
+            font-weight: bold;
+        }
+        .motif-aa.sty {
+            background-color: #bbdefb;
+        }
+        .motif-aa.nq {
+            background-color: #b39ddb;
+        }
+        .motif-aa.cys {
+            background-color: #ffcc80;
+        }
+        .motif-aa.proline {
+            background-color: #81c784;
+        }
+        .motif-aa.nonpolar {
+            background-color: #ffecb3;
+        }
+        .motif-aa.acidic {
+            background-color: #ffcdd2;
+        }
+        .motif-aa.basic {
+            background-color: #c8e6c9;
+        }
+        .motif-aa.special {
+            background-color: #e1bee7;
+        }
+        .motif-aa.aa-x {
+            background-color: #e0e0e0;
+            color: #9e9e9e;
+        }
+        .node-info-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 250px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            font-size: 0.9rem;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+        #sequence-network-container {
+            height: 500px;
+            width: 100%;
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -335,6 +421,23 @@
         </div>
         {% endif %}
         
+        <!-- Enhanced 3D Visualization -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Enhanced Structural View</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {{ enhanced_3d_html|safe }}
+                    </div>
+                    <div class="card-footer text-muted small">
+                        Interactive view with amino acid type coloring and site environment focus.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Residue Distribution Analysis - Optional, can be uncommented if needed -->
         {% if distribution_data %}
         <div class="row mt-4">
@@ -397,6 +500,11 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- Sequence Similarity Section -->
+        <!-- Include the sequence_section.html template -->
+        {% include 'site_sequence_section.html' %}
+
     </div>
 
     <!-- Footer -->
@@ -615,6 +723,7 @@
                 .text(d => d.id);
             
             // Function to update the info panel with node data
+            // Function to update the info panel with node data
             function updateInfoPanel(d) {
                 debug("Updating info panel for node", d.id);
                 
@@ -789,201 +898,120 @@
             debug("Network visualization setup complete");
         });
     </script>
-
-
+    
+    <!-- Sequence Similarity Network Script -->
+    {% include 'sequence_network_script.html' %}
+    
+    <!-- Additional script to ensure motifs are properly formatted -->
     <script>
-        function standardizeMotif(motif, sitePosition, absolutePosition) {
-            // Handle case where absolutePosition is provided directly
-            if (typeof absolutePosition === 'number') {
-                // Calculate padding needed at beginning
-                const aasBefore = absolutePosition - 1; // For S6, this is 5
-                const paddingNeeded = Math.max(0, 7 - aasBefore);
-                
-                // Get center position in the motif (usually the phosphosite)
-                const centerPos = Math.floor(motif.length / 2);
-                
-                // Extract parts
-                const siteChar = motif.charAt(centerPos);
-                const beforeSite = motif.substring(0, centerPos);
-                const afterSite = motif.substring(centerPos + 1);
-                
-                // For the before part: take all available residues (up to 7)
-                let paddedBefore;
-                if (beforeSite.length <= 7) {
-                    // If we have fewer than 7 residues, add X padding at the beginning
-                    paddedBefore = 'X'.repeat(paddingNeeded) + beforeSite;
-                } else {
-                    // If we have more than 7, take the last 7
-                    paddedBefore = beforeSite.slice(-7);
-                }
-                
-                // For the after part: take exactly 7 characters, NO padding
-                const paddedAfter = afterSite.slice(0, 7);
-                
-                return paddedBefore + siteChar + paddedAfter;
-            }
-            
-            // Default case when we don't know the position
-            const centerPos = Math.floor(motif.length / 2);
-            const siteChar = motif.charAt(centerPos);
-            const beforeSite = motif.substring(0, centerPos);
-            const afterSite = motif.substring(centerPos + 1);
-            
-            // Default padding logic
-            const paddedBefore = beforeSite.length >= 7 ? 
-                                beforeSite.slice(-7) : 
-                                'X'.repeat(7 - beforeSite.length) + beforeSite;
-            
-            // Take exactly 7 after, NO padding
-            const paddedAfter = afterSite.slice(0, 7);
-            
-            return paddedBefore + siteChar + paddedAfter;
-        }
-
-    // Improved function to determine amino acid class
-    function getAminoAcidClass(aa) {
-        if (aa === 'X') {
-            return "aa-x";
-        } else if ('STY'.includes(aa)) {
-            return "sty";
-        } else if ('NQ'.includes(aa)) {
-            return "nq";
-        } else if (aa === 'C') {
-            return "cys";
-        } else if (aa === 'P') {
-            return "proline";
-        } else if ('AVILMFWG'.includes(aa)) {
-            return "nonpolar";
-        } else if ('DE'.includes(aa)) {
-            return "acidic";
-        } else if ('KRH'.includes(aa)) {
-            return "basic";
-        } else {
-            return "special";
-        }
-    }
-
-    // Function to format motifs with colored blocks
-    function formatMotifsAsBlocks() {
-        console.log("Formatting motifs as colored blocks...");
-        
-        // Find all elements containing motif sequences
-        const motifElements = document.querySelectorAll('.motif-sequence, .card-body table tr td:nth-child(2) code');
-        
-        motifElements.forEach(element => {
-            // Skip elements already formatted
-            if (element.querySelector('.motif-aa')) return;
-            
-            // Get the motif text and trim it
-            const originalText = element.textContent.trim();
-            if (!originalText || originalText.length < 5) return; // Skip short or empty text
-            
-            // Check if it contains valid amino acid characters
-            if (/^[ACDEFGHIKLMNPQRSTVWYX]+$/.test(originalText)) {
-                console.log("Found motif:", originalText);
-                
-                // Get the site number from the row if possible
-                let siteNumber = null;
-                const row = element.closest('tr');
-                if (row) {
-                    const firstCell = row.querySelector('td:first-child');
-                    if (firstCell) {
-                        const siteText = firstCell.textContent.trim();
-                        const match = siteText.match(/([STY])(\d+)/);
-                        if (match && match[2]) {
-                            siteNumber = parseInt(match[2], 10);
-                            console.log("Found site number:", siteNumber);
-                        }
-                    }
-                }
-                
-                // Create a container for the motif
-                const motifContainer = document.createElement('div');
-                motifContainer.style.display = 'flex';
-                motifContainer.style.flexWrap = 'nowrap';
-                motifContainer.className = 'formatted-motif';
-                
-                // Find the center position (typically phosphosite)
-                const centerPos = Math.floor(originalText.length / 2);
-                
-                // Standardize the motif with proper X padding
-                const standardizedMotif = standardizeMotif(originalText, null, siteNumber);
-                console.log("Standardized motif:", standardizedMotif);
-                
-                // Process each character in the standardized motif
-                for (let i = 0; i < standardizedMotif.length; i++) {
-                    const aa = standardizedMotif[i];
-                    const aaBox = document.createElement('div');
-                    
-                    // Set basic styling
-                    aaBox.style.width = '24px';
-                    aaBox.style.height = '24px';
-                    aaBox.style.display = 'flex';
-                    aaBox.style.alignItems = 'center';
-                    aaBox.style.justifyContent = 'center';
-                    aaBox.style.margin = '1px';
-                    aaBox.style.borderRadius = '3px';
-                    aaBox.textContent = aa;
-                    
-                    // Apply appropriate colors based on amino acid type
-                    if (i === 7) {  // Center position is always at index 7 in standardized motif
-                        // Phosphosite (center position)
-                        aaBox.style.backgroundColor = '#ff5722';
-                        aaBox.style.color = 'white';
-                        aaBox.style.fontWeight = 'bold';
-                    } else if (aa === 'X') {
-                        // Placeholder X
-                        aaBox.style.backgroundColor = '#e0e0e0';
-                        aaBox.style.color = '#9e9e9e';
-                    } else if ('STY'.includes(aa)) {
-                        // STY group
-                        aaBox.style.backgroundColor = '#bbdefb';
-                    } else if ('NQ'.includes(aa)) {
-                        // NQ group
-                        aaBox.style.backgroundColor = '#b39ddb';
-                    } else if (aa === 'C') {
-                        // Cysteine
-                        aaBox.style.backgroundColor = '#ffcc80';
-                    } else if (aa === 'P') {
-                        // Proline
-                        aaBox.style.backgroundColor = '#81c784';
-                    } else if ('AVILMFWG'.includes(aa)) {
-                        // Other nonpolar
-                        aaBox.style.backgroundColor = '#ffecb3';
-                    } else if ('DE'.includes(aa)) {
-                        // Acidic
-                        aaBox.style.backgroundColor = '#ffcdd2';
-                    } else if ('KRH'.includes(aa)) {
-                        // Basic
-                        aaBox.style.backgroundColor = '#c8e6c9';
-                    } else {
-                        // Special/other
-                        aaBox.style.backgroundColor = '#e1bee7';
-                    }
-                    
-                    motifContainer.appendChild(aaBox);
-                }
-                
-                // Replace the original text with our formatted motif
-                element.innerHTML = '';
-                element.appendChild(motifContainer);
-            }
-        });
-    }
-
-    // Run the formatter once the DOM is fully loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("DOM loaded, formatting motifs...");
-        // Give a slight delay to ensure everything is rendered
-        setTimeout(formatMotifsAsBlocks, 100);
-        
-        // Also run when any tabs are clicked (in case of dynamically loaded content)
-        document.querySelectorAll('.nav-link').forEach(tab => {
-            tab.addEventListener('click', () => {
-                setTimeout(formatMotifsAsBlocks, 300);
+        // Tab-based formatting trigger - make sure motifs are formatted when tabs change
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab-based formatting trigger - make sure motifs are formatted when tabs change
+            document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(button) {
+                button.addEventListener('shown.bs.tab', function() {
+                    // Small delay to ensure content is rendered
+                    setTimeout(formatMotifBlocks, 200);
+                });
             });
+            
+            // Format motifs on page load with a delay to ensure DOM is ready
+            setTimeout(formatMotifBlocks, 300);
+            
+            function formatMotifBlocks() {
+                document.querySelectorAll('.motif-sequence:not(.formatted)').forEach(function(element) {
+                    // Skip elements already formatted or those containing formatted sub-elements
+                    if (element.classList.contains('formatted') || element.querySelector('.motif-aa')) {
+                        return;
+                    }
+                    
+                    // Get the motif text 
+                    const motifText = element.textContent.trim();
+                    if (!motifText || motifText.length < 7) return;
+                    
+                    // Only format strings that look like amino acid sequences
+                    if (!/^[ACDEFGHIKLMNPQRSTVWYX]+$/.test(motifText)) return;
+                    
+                    // Create a flex container
+                    const container = document.createElement('div');
+                    container.className = 'motif-flex-container';
+                    container.style.display = 'flex';
+                    container.style.flexWrap = 'nowrap';
+                    
+                    // Determine center position (phosphosite)
+                    const centerPos = Math.floor(motifText.length / 2);
+                    
+                    // Process each character in the motif
+                    for (let i = 0; i < motifText.length; i++) {
+                        const aa = motifText[i];
+                        const box = document.createElement('div');
+                        
+                        // Basic styling
+                        box.className = 'motif-aa';
+                        box.style.width = '24px';
+                        box.style.height = '24px';
+                        box.style.display = 'flex';
+                        box.style.alignItems = 'center';
+                        box.style.justifyContent = 'center';
+                        box.style.margin = '0 1px';
+                        box.style.borderRadius = '3px';
+                        box.textContent = aa;
+                        
+                        // Apply colors based on amino acid type
+                        if (i === centerPos) {
+                            // Phosphosite (center position)
+                            box.style.backgroundColor = '#ff5722';
+                            box.style.color = 'white';
+                            box.style.fontWeight = 'bold';
+                            box.classList.add('highlighted');
+                        } else if (aa === 'X') {
+                            // Placeholder X
+                            box.style.backgroundColor = '#e0e0e0';
+                            box.style.color = '#9e9e9e';
+                            box.classList.add('aa-x');
+                        } else if ('STY'.includes(aa)) {
+                            // STY group
+                            box.style.backgroundColor = '#bbdefb';
+                            box.classList.add('sty');
+                        } else if ('NQ'.includes(aa)) {
+                            // NQ group
+                            box.style.backgroundColor = '#b39ddb';
+                            box.classList.add('nq');
+                        } else if (aa === 'C') {
+                            // Cysteine
+                            box.style.backgroundColor = '#ffcc80';
+                            box.classList.add('cys');
+                        } else if (aa === 'P') {
+                            // Proline
+                            box.style.backgroundColor = '#81c784';
+                            box.classList.add('proline');
+                        } else if ('AVILMFWG'.includes(aa)) {
+                            // Other nonpolar
+                            box.style.backgroundColor = '#ffecb3';
+                            box.classList.add('nonpolar');
+                        } else if ('DE'.includes(aa)) {
+                            // Acidic
+                            box.style.backgroundColor = '#ffcdd2';
+                            box.classList.add('acidic');
+                        } else if ('KRH'.includes(aa)) {
+                            // Basic
+                            box.style.backgroundColor = '#c8e6c9';
+                            box.classList.add('basic');
+                        } else {
+                            // Special/other
+                            box.style.backgroundColor = '#e1bee7';
+                            box.classList.add('special');
+                        }
+                        
+                        container.appendChild(box);
+                    }
+                    
+                    // Replace the original content
+                    element.innerHTML = '';
+                    element.appendChild(container);
+                    element.classList.add('formatted');
+                });
+            }
         });
-    });
     </script>
 </body>
 </html>

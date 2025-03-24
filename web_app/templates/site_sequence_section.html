@@ -1,0 +1,271 @@
+<!-- Sequence Similarity Tab Content -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Sequence Similarity Analysis</h5>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="sequenceTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="seq-network-tab" data-bs-toggle="tab" data-bs-target="#seq-network" 
+                                type="button" role="tab" aria-controls="seq-network" aria-selected="true">Network</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="seq-motif-tab" data-bs-toggle="tab" data-bs-target="#seq-motif" 
+                                type="button" role="tab" aria-controls="seq-motif" aria-selected="false">Motif Comparison</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="seq-conservation-tab" data-bs-toggle="tab" data-bs-target="#seq-conservation" 
+                                type="button" role="tab" aria-controls="seq-conservation" aria-selected="false">Conservation Analysis</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="seq-table-tab" data-bs-toggle="tab" data-bs-target="#seq-table" 
+                                type="button" role="tab" aria-controls="seq-table" aria-selected="false">Match Table</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content border border-top-0 rounded-bottom p-3" id="sequenceTabContent">
+                    <!-- Sequence Network Visualization Tab -->
+                    <div class="tab-pane fade show active" id="seq-network" role="tabpanel" aria-labelledby="seq-network-tab">
+                        {% if sequence_network_data and sequence_network_data.nodes|length > 0 %}
+                            <p class="mb-3">This network visualization shows sequence similarities between phosphorylation sites. 
+                               The queried site is shown in green at the center, with matches connected by edges. 
+                               Thicker edges indicate higher sequence similarity.</p>
+                            
+                            <div id="sequence-network-container" style="height: 500px; width: 100%; position: relative;"></div>
+                            
+                            <!-- Network filter controls -->
+                            <div class="card mt-3">
+                                <div class="card-body">
+                                    <h6>Filter by Sequence Similarity</h6>
+                                    <input type="range" class="form-range" id="seq-similarity-filter" min="0.0" max="1.0" step="0.05" value="0.4">
+                                    <div class="d-flex justify-content-between">
+                                        <small>0.0</small>
+                                        <small>Similarity threshold: <span id="similarity-value">0.4</span></small>
+                                        <small>1.0</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Network legend -->
+                            <div class="card mt-3">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Color Legend</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex flex-wrap justify-content-center">
+                                        <div class="mx-3 d-flex align-items-center mb-2">
+                                            <div style="width:16px; height:16px; background-color:#198754; border-radius:50%; margin-right:5px;"></div>
+                                            <span>Query Site</span>
+                                        </div>
+                                        <div class="mx-3 d-flex align-items-center mb-2">
+                                            <div style="width:16px; height:16px; background-color:#28a745; border-radius:50%; margin-right:5px;"></div>
+                                            <span>High Similarity (0.8-1.0)</span>
+                                        </div>
+                                        <div class="mx-3 d-flex align-items-center mb-2">
+                                            <div style="width:16px; height:16px; background-color:#ffc107; border-radius:50%; margin-right:5px;"></div>
+                                            <span>Medium Similarity (0.6-0.8)</span>
+                                        </div>
+                                        <div class="mx-3 d-flex align-items-center mb-2">
+                                            <div style="width:16px; height:16px; background-color:#dc3545; border-radius:50%; margin-right:5px;"></div>
+                                            <span>Low Similarity (0.4-0.6)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden network data for JavaScript to use -->
+                            <script id="sequence-network-data" type="application/json">
+                                {{ sequence_network_data|tojson|safe }}
+                            </script>
+                        {% else %}
+                            <div class="alert alert-info">
+                                No sequence similarity matches available to display in network.
+                                {% if sequence_matches is defined %}
+                                    <br>(Found {{ sequence_matches|length }} sequence matches, but unable to create network data)
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Motif Comparison Tab -->
+                    <div class="tab-pane fade" id="seq-motif" role="tabpanel" aria-labelledby="seq-motif-tab">
+                        {% if sequence_motif_html %}
+                            {{ sequence_motif_html|safe }}
+                        {% else %}
+                            <div class="alert alert-info">
+                                No motif comparison data available for sequence-similar sites.
+                                {% if sequence_matches and sequence_matches|length > 0 %}
+                                    <br>(Found {{ sequence_matches|length }} sequence matches, but no motif data available)
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Conservation Analysis Tab -->
+                    <div class="tab-pane fade" id="seq-conservation" role="tabpanel" aria-labelledby="seq-conservation-tab">
+                        {% if sequence_conservation %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Sequence Consensus Motif</h6>
+                                    <div class="alert alert-info">
+                                        <code class="motif-sequence">{{ sequence_conservation.consensus_motif }}</code>
+                                    </div>
+                                    <p class="small text-muted">Based on {{ sequence_conservation.motif_count }} sequence similar sites</p>
+                                    
+                                    {% if sequence_conservation.conserved_positions %}
+                                    <h6 class="mt-3">Conserved Positions</h6>
+                                    <ul class="list-group">
+                                        {% for pos in sequence_conservation.conserved_positions %}
+                                        <li class="list-group-item">
+                                            Position {{ pos.position }}: {{ pos.amino_acid }} ({{ pos.frequency|round }}% conserved)
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% else %}
+                                    <div class="alert alert-info">
+                                        No conserved positions identified.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6>Region Analysis</h6>
+                                    <div class="card mb-3">
+                                        <div class="card-header">N-terminal Region (-7 to -1)</div>
+                                        <div class="card-body">
+                                            <h6>Amino Acid Group Composition</h6>
+                                            <ul class="list-unstyled">
+                                                {% for group, percent in sequence_conservation.n_term_analysis.group_composition.items() %}
+                                                <li>
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <span>{{ group|capitalize }}</span>
+                                                        <span class="badge bg-secondary">{{ percent|round(1) }}%</span>
+                                                    </div>
+                                                    <div class="progress mb-2" style="height: 12px;">
+                                                        <div class="progress-bar 
+                                                            {% if group == 'polar' %}bg-info
+                                                            {% elif group == 'nonpolar' %}bg-warning
+                                                            {% elif group == 'acidic' %}bg-danger
+                                                            {% elif group == 'basic' %}bg-success
+                                                            {% else %}bg-secondary{% endif %}"
+                                                            style="width: {{ percent }}%"></div>
+                                                    </div>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card">
+                                        <div class="card-header">C-terminal Region (+1 to +7)</div>
+                                        <div class="card-body">
+                                            <h6>Amino Acid Group Composition</h6>
+                                            <ul class="list-unstyled">
+                                                {% for group, percent in sequence_conservation.c_term_analysis.group_composition.items() %}
+                                                <li>
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <span>{{ group|capitalize }}</span>
+                                                        <span class="badge bg-secondary">{{ percent|round(1) }}%</span>
+                                                    </div>
+                                                    <div class="progress mb-2" style="height: 12px;">
+                                                        <div class="progress-bar 
+                                                            {% if group == 'polar' %}bg-info
+                                                            {% elif group == 'nonpolar' %}bg-warning
+                                                            {% elif group == 'acidic' %}bg-danger
+                                                            {% elif group == 'basic' %}bg-success
+                                                            {% else %}bg-secondary{% endif %}"
+                                                            style="width: {{ percent }}%"></div>
+                                                    </div>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                No conservation analysis data available for sequence-similar sites.
+                                {% if sequence_matches and sequence_matches|length > 0 %}
+                                    <br>(Found {{ sequence_matches|length }} sequence matches, but conservation analysis could not be completed)
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Match Table Tab -->
+                    <div class="tab-pane fade" id="seq-table" role="tabpanel" aria-labelledby="seq-table-tab">
+                        {% if sequence_matches and sequence_matches|length > 0 %}
+                            <div class="alert alert-info">
+                                Found {{ sequence_matches|length }} sequence matches. 
+                                {% if sequence_matches|length > 100 %}
+                                    Showing first 100. Use the similarity filter to refine results.
+                                {% endif %}
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Target Site</th>
+                                            <th>UniProt ID</th>
+                                            <th>Sequence Similarity</th>
+                                            <th>Motif (if available)</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for match in sequence_matches[:100] %}  <!-- Limit to first 100 for performance -->
+                                        <tr class="seq-match-row" data-similarity="{{ match.similarity }}">
+                                            <td>{{ match.target_site }}</td>
+                                            <td>
+                                                <a href="https://www.uniprot.org/uniprotkb/{{ match.target_uniprot }}" target="_blank">
+                                                    {{ match.target_uniprot }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar 
+                                                        {% if match.similarity >= 0.8 %}bg-success
+                                                        {% elif match.similarity >= 0.6 %}bg-warning
+                                                        {% else %}bg-danger{% endif %}"
+                                                        style="width: {{ match.similarity * 100 }}%">
+                                                        {{ (match.similarity * 100)|round(1) }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if match.motif %}
+                                                <code class="small motif-sequence">{{ match.motif }}</code>
+                                                {% else %}
+                                                <span class="text-muted">Not available</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="/site/{{ match.target_uniprot }}/{{ match.target_site }}" class="btn btn-sm btn-outline-primary">
+                                                    View Site
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                No sequence similarity matches found for this site.
+                                {% if sequence_matches is defined %}
+                                    <br>(Length of sequence_matches: {{ sequence_matches|length }})
+                                {% else %}
+                                    <br>(sequence_matches is not defined)
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
