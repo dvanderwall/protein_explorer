@@ -13,9 +13,10 @@ setup(
         "scikit-learn>=0.24.0",
         "flask>=2.0.0",
         "biopython>=1.78",
+        "pandas>=2.0.3",  # Added pandas
     ],
-    author="Your Name",
-    author_email="your.email@example.com",
+    author="David Vanderwall",
+    author_email="dvanderwall@hms.harvard.edu",
     description="A package for exploring protein structures and interactions",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
