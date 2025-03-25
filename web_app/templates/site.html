@@ -16,6 +16,11 @@
     
     <!-- Add kinase prediction JS -->
     <script src="{{ url_for('static', filename='js/kinase_prediction.js') }}"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
     <style>
         /* Styling for the site page */
         .metadata-card {
@@ -258,6 +263,8 @@
                     </div>
                 </div>
             </div>
+
+            <input type="hidden" id="site-id" value="{{ site_id }}">
             
             <!-- Structural Context Section -->
             <div class="col-lg-6">
@@ -382,6 +389,9 @@
 
     {% include 'combined_kinase_tab.html' %}
     
+    <script src="{{ url_for('static', filename='js/network-kinase-visualization.js') }}"></script>
+    {% include 'network_kinase_tab.html' %}
+
     <!-- Additional script to ensure motifs are properly formatted -->
     <script>
         // Ensure motifs are formatted on page load with a delay to ensure DOM is ready

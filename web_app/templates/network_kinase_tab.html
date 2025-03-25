@@ -1,0 +1,420 @@
+<!-- network_kinase_tab.html -->
+<!-- This file contains all tab content for the network kinase analysis -->
+
+<!-- Structure Network Tab Content -->
+<div class="tab-pane fade" id="struct-network-kinase" role="tabpanel" aria-labelledby="struct-network-kinase-tab">
+    {% if structure_network_kinase_data and structure_network_kinase_data.top_kinases %}
+        <div class="alert alert-info mb-3">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Analysis based on <strong>{{ structure_network_kinase_data.site_count }}</strong> structurally similar sites 
+            (RMSD < {{ structure_network_kinase_data.rmsd_threshold }} Å).
+        </div>
+        
+        <!-- RMSD Threshold Controls -->
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">RMSD Threshold (Å)</h6>
+            </div>
+            <div class="card-body">
+                <input type="range" class="form-range" id="rmsd-threshold" min="1.0" max="6.0" step="0.1" value="{{ structure_network_kinase_data.rmsd_threshold }}">
+                <div class="d-flex justify-content-between">
+                    <small>1.0</small>
+                    <small>Threshold: <span id="rmsd-threshold-value">{{ structure_network_kinase_data.rmsd_threshold }} Å</span></small>
+                    <small>6.0</small>
+                </div>
+                <button id="update-rmsd-threshold" class="btn btn-sm btn-primary mt-2">Update Analysis</button>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <!-- Top Kinases Bar Chart -->
+            <div class="col-lg-8">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">Top Predicted Kinases (Structure Network)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 300px;">
+                            <canvas id="struct-network-kinase-chart"></canvas>
+                        </div>
+                        <p class="small text-muted mt-3">
+                            <strong>Error bars</strong> show the range of scores across similar sites.
+                            <strong>Diamonds</strong> show median scores.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Kinase Family Distribution -->
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">Kinase Family Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 300px;">
+                            <canvas id="struct-network-kinase-family-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Heatmap Visualization -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Network Kinase Prediction Heatmap</h6>
+            </div>
+            <div class="card-body">
+                <p>
+                    This heatmap shows kinase prediction scores across structurally similar sites.
+                    Common patterns may indicate conserved kinase recognition.
+                </p>
+                <div id="struct-network-kinase-heatmap" style="height: 400px;"></div>
+            </div>
+        </div>
+        
+        <!-- Statistics Table -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Network Prediction Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Kinase</th>
+                                <th>Mean Score</th>
+                                <th>Median Score</th>
+                                <th>Min Score</th>
+                                <th>Max Score</th>
+                                <th>Sample Size</th>
+                                <th>Variability</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for kinase in structure_network_kinase_data.top_kinases %}
+                            <tr>
+                                <td>{{ kinase.kinase }}</td>
+                                <td>{{ kinase.mean_score|round(3) }}</td>
+                                <td>{{ kinase.median_score|round(3) }}</td>
+                                <td>{{ kinase.min_score|round(3) }}</td>
+                                <td>{{ kinase.max_score|round(3) }}</td>
+                                <td>{{ kinase.sample_size }}</td>
+                                <td>{{ kinase.variability|round(3) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hidden network kinase data for JavaScript -->
+        <script id="struct-network-kinase-data" type="application/json">
+            {{ structure_network_kinase_data|tojson|safe }}
+        </script>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            No structure network-based kinase prediction data available for this site.
+        </div>
+    {% endif %}
+</div>
+
+<!-- Sequence Network Tab Content -->
+<div class="tab-pane fade" id="seq-network-kinase" role="tabpanel" aria-labelledby="seq-network-kinase-tab">
+    {% if sequence_network_kinase_data and sequence_network_kinase_data.top_kinases %}
+        <div class="alert alert-info mb-3">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Analysis based on <strong>{{ sequence_network_kinase_data.site_count }}</strong> sequence-similar sites 
+            (Similarity > {{ sequence_network_kinase_data.similarity_threshold }}).
+        </div>
+        
+        <!-- Similarity Threshold Controls -->
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">Sequence Similarity Threshold</h6>
+            </div>
+            <div class="card-body">
+                <input type="range" class="form-range" id="seq-similarity-threshold" min="0.4" max="1.0" step="0.05" value="{{ sequence_network_kinase_data.similarity_threshold }}">
+                <div class="d-flex justify-content-between">
+                    <small>0.4</small>
+                    <small>Threshold: <span id="seq-similarity-value">{{ sequence_network_kinase_data.similarity_threshold }}</span></small>
+                    <small>1.0</small>
+                </div>
+                <button id="update-seq-similarity-threshold" class="btn btn-sm btn-primary mt-2">Update Analysis</button>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <!-- Top Kinases Bar Chart -->
+            <div class="col-lg-8">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">Top Predicted Kinases (Sequence Network)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 300px;">
+                            <canvas id="seq-network-kinase-chart"></canvas>
+                        </div>
+                        <p class="small text-muted mt-3">
+                            <strong>Error bars</strong> show the range of scores across similar sites.
+                            <strong>Diamonds</strong> show median scores.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Kinase Family Distribution -->
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">Kinase Family Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 300px;">
+                            <canvas id="seq-network-kinase-family-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Heatmap Visualization -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Network Kinase Prediction Heatmap</h6>
+            </div>
+            <div class="card-body">
+                <p>
+                    This heatmap shows kinase prediction scores across sequence-similar sites.
+                    Common patterns may indicate conserved kinase recognition.
+                </p>
+                <div id="seq-network-kinase-heatmap" style="height: 400px;"></div>
+            </div>
+        </div>
+        
+        <!-- Statistics Table -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Network Prediction Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Kinase</th>
+                                <th>Mean Score</th>
+                                <th>Median Score</th>
+                                <th>Min Score</th>
+                                <th>Max Score</th>
+                                <th>Sample Size</th>
+                                <th>Variability</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for kinase in sequence_network_kinase_data.top_kinases %}
+                            <tr>
+                                <td>{{ kinase.kinase }}</td>
+                                <td>{{ kinase.mean_score|round(3) }}</td>
+                                <td>{{ kinase.median_score|round(3) }}</td>
+                                <td>{{ kinase.min_score|round(3) }}</td>
+                                <td>{{ kinase.max_score|round(3) }}</td>
+                                <td>{{ kinase.sample_size }}</td>
+                                <td>{{ kinase.variability|round(3) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hidden network kinase data for JavaScript -->
+        <script id="seq-network-kinase-data" type="application/json">
+            {{ sequence_network_kinase_data|tojson|safe }}
+        </script>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            No sequence network-based kinase prediction data available for this site.
+        </div>
+    {% endif %}
+</div>
+
+<!-- Debug section for network kinase data -->
+<script>
+    // Run this function to validate network kinase data
+    function debugNetworkKinaseData() {
+        console.log("========== DEBUGGING NETWORK KINASE DATA ==========");
+        
+        // Check structural network data
+        const structDataScript = document.getElementById('struct-network-kinase-data');
+        if (structDataScript) {
+            try {
+                const structData = JSON.parse(structDataScript.textContent);
+                console.log("Structural Network Data:", structData);
+                console.log("- Top kinases:", structData.top_kinases ? structData.top_kinases.length : 'missing');
+                console.log("- Heatmap:", structData.heatmap ? 'present' : 'missing');
+                
+                if (structData.heatmap) {
+                    console.log("  - Sites:", structData.heatmap.sites ? structData.heatmap.sites.length : 'missing');
+                    console.log("  - Kinases:", structData.heatmap.kinases ? structData.heatmap.kinases.length : 'missing');
+                    console.log("  - Scores:", structData.heatmap.scores ? structData.heatmap.scores.length : 'missing');
+                    
+                    if (structData.heatmap.sites && structData.heatmap.kinases && structData.heatmap.scores) {
+                        // Check if scores array has expected number of entries
+                        const expectedEntries = structData.heatmap.sites.length * structData.heatmap.kinases.length;
+                        console.log(`  - Expected scores entries: ${expectedEntries}, Actual: ${structData.heatmap.scores.length}`);
+                        
+                        if (structData.heatmap.scores.length < expectedEntries) {
+                            console.warn("  ⚠️ Incomplete heatmap data - missing entries");
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Error parsing structural network data:", e);
+            }
+        } else {
+            console.warn("No structural network data script found");
+        }
+        
+        // Check sequence network data
+        const seqDataScript = document.getElementById('seq-network-kinase-data');
+        if (seqDataScript) {
+            try {
+                const seqData = JSON.parse(seqDataScript.textContent);
+                console.log("Sequence Network Data:", seqData);
+                console.log("- Top kinases:", seqData.top_kinases ? seqData.top_kinases.length : 'missing');
+                console.log("- Heatmap:", seqData.heatmap ? 'present' : 'missing');
+                
+                if (seqData.heatmap) {
+                    console.log("  - Sites:", seqData.heatmap.sites ? seqData.heatmap.sites.length : 'missing');
+                    console.log("  - Kinases:", seqData.heatmap.kinases ? seqData.heatmap.kinases.length : 'missing');
+                    console.log("  - Scores:", seqData.heatmap.scores ? seqData.heatmap.scores.length : 'missing');
+                    
+                    if (seqData.heatmap.sites && seqData.heatmap.kinases && seqData.heatmap.scores) {
+                        // Check if scores array has expected number of entries
+                        const expectedEntries = seqData.heatmap.sites.length * seqData.heatmap.kinases.length;
+                        console.log(`  - Expected scores entries: ${expectedEntries}, Actual: ${seqData.heatmap.scores.length}`);
+                        
+                        if (seqData.heatmap.scores.length < expectedEntries) {
+                            console.warn("  ⚠️ Incomplete heatmap data - missing entries");
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Error parsing sequence network data:", e);
+            }
+        } else {
+            console.warn("No sequence network data script found");
+        }
+        
+        // Check DOM containers
+        console.log("Checking DOM containers...");
+        console.log("- struct-network-kinase-chart:", document.getElementById('struct-network-kinase-chart') ? 'found' : 'missing');
+        console.log("- struct-network-kinase-family-chart:", document.getElementById('struct-network-kinase-family-chart') ? 'found' : 'missing');
+        console.log("- struct-network-kinase-heatmap:", document.getElementById('struct-network-kinase-heatmap') ? 'found' : 'missing');
+        console.log("- seq-network-kinase-chart:", document.getElementById('seq-network-kinase-chart') ? 'found' : 'missing');
+        console.log("- seq-network-kinase-family-chart:", document.getElementById('seq-network-kinase-family-chart') ? 'found' : 'missing');
+        console.log("- seq-network-kinase-heatmap:", document.getElementById('seq-network-kinase-heatmap') ? 'found' : 'missing');
+        
+        // Check tab visibility
+        const structTab = document.getElementById('struct-network-kinase');
+        console.log("- struct-network-kinase tab visibility:", 
+                   structTab ? 
+                   (structTab.classList.contains('show') ? 'visible' : 'hidden') : 
+                   'tab not found');
+        
+        const seqTab = document.getElementById('seq-network-kinase');
+        console.log("- seq-network-kinase tab visibility:", 
+                   seqTab ? 
+                   (seqTab.classList.contains('show') ? 'visible' : 'hidden') : 
+                   'tab not found');
+        
+        console.log("========== END DEBUG ==========");
+        
+    }
+    
+    // Add a debug button
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add a debug button to the page
+        const debugButton = document.createElement('button');
+        debugButton.classList.add('btn', 'btn-sm', 'btn-outline-danger', 'position-fixed');
+        debugButton.style.bottom = '10px';
+        debugButton.style.right = '10px';
+        debugButton.style.zIndex = '1000';
+        debugButton.textContent = 'Debug Kinase Data';
+        debugButton.onclick = debugNetworkKinaseData;
+        
+        document.body.appendChild(debugButton);
+        
+        // Auto-run debug after 3 seconds
+        setTimeout(debugNetworkKinaseData, 3000);
+    });
+</script>
+
+<!-- Add a manual heatmap visualization fallback trigger -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add a button to each tab to manually trigger heatmap visualization
+        const addManualTrigger = (tabContentId, heatmapId, dataScriptId) => {
+            const tabContent = document.getElementById(tabContentId);
+            const heatmapContainer = document.getElementById(heatmapId);
+            
+            if (tabContent && heatmapContainer) {
+                const triggerButton = document.createElement('button');
+                triggerButton.classList.add('btn', 'btn-sm', 'btn-outline-primary', 'mt-2', 'mb-2');
+                triggerButton.textContent = 'Manually Update Heatmap';
+                triggerButton.onclick = function() {
+                    try {
+                        const dataScript = document.getElementById(dataScriptId);
+                        if (dataScript) {
+                            const data = JSON.parse(dataScript.textContent);
+                            if (data && data.heatmap) {
+                                // Clear container
+                                heatmapContainer.innerHTML = '<div class="alert alert-info">Attempting to render heatmap...</div>';
+                                
+                                // Use the dataType from tabContentId
+                                const dataType = tabContentId.includes('struct') ? 'structure' : 'sequence';
+                                
+                                // Manually call the heatmap function
+                                setTimeout(() => {
+                                    try {
+                                        createNetworkKinaseHeatmap(heatmapId, data.heatmap, dataType);
+                                    } catch (e) {
+                                        console.error(`Error manually rendering heatmap:`, e);
+                                        heatmapContainer.innerHTML = `<div class="alert alert-danger">
+                                            Error rendering heatmap: ${e.message}<br>
+                                            See console for details.
+                                        </div>`;
+                                    }
+                                }, 100);
+                            } else {
+                                heatmapContainer.innerHTML = '<div class="alert alert-warning">No heatmap data available in the script tag.</div>';
+                            }
+                        } else {
+                            heatmapContainer.innerHTML = '<div class="alert alert-warning">Data script tag not found.</div>';
+                        }
+                    } catch (e) {
+                        console.error('Error manually updating heatmap:', e);
+                        heatmapContainer.innerHTML = `<div class="alert alert-danger">
+                            Error: ${e.message}<br>
+                            See console for details.
+                        </div>`;
+                    }
+                };
+                
+                // Insert before the heatmap container
+                heatmapContainer.parentNode.insertBefore(triggerButton, heatmapContainer);
+            }
+        };
+        
+        // Add manual triggers for both tabs
+        addManualTrigger('struct-network-kinase', 'struct-network-kinase-heatmap', 'struct-network-kinase-data');
+        addManualTrigger('seq-network-kinase', 'seq-network-kinase-heatmap', 'seq-network-kinase-data');
+    });
+</script>

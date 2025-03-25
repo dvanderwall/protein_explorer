@@ -1,9 +1,41 @@
-flask>=2.0.0
-gunicorn>=20.1.0
-requests>=2.25.0
-numpy>=1.20.0
-scipy>=1.6.0
-networkx>=2.5.0
-plotly>=4.14.0
-scikit-learn>=0.24.0
-biopython>=1.78
+# Core dependencies
+flask==2.3.3
+gunicorn==23.0.0
+werkzeug==2.3.7
+jinja2==3.1.2
+
+# Data processing and analysis
+numpy==1.24.3
+pandas==2.0.3
+scipy==1.11.2
+scikit-learn==1.3.0
+networkx==3.1
+pyarrow==12.0.1  # For feather and parquet files
+
+# Bioinformatics
+biopython==1.81
+tqdm==4.66.1
+
+# Visualization
+plotly==5.16.1
+matplotlib==3.7.2
+seaborn==0.12.2
+
+# Web requests
+requests==2.31.0
+
+# File formats
+pyarrow==12.0.1  # Needed for both feather and parquet files
+
+# Web framework extensions
+flask-cors==4.0.0  # For handling cross-origin requests
+flask-caching==2.0.2  # For caching API responses
+
+# Caching
+joblib==1.3.2
+
+# Utilities
+typing-extensions==4.7.1
+pyyaml==6.0.1
+python-dotenv==1.0.0
+community==1.0.0b1  # For Louvain community detection in networks

@@ -1,7 +1,7 @@
 <!-- Kinase Prediction Tab -->
 <li class="nav-item" role="presentation">
-    <button class="nav-link" id="struct-kinase-tab" data-bs-toggle="tab" data-bs-target="#struct-kinase" 
-            type="button" role="tab" aria-controls="struct-kinase" aria-selected="false">Kinase Prediction</button>
+    <button class="nav-link network-kinase-tab-btn" id="struct-network-kinase-tab" data-bs-toggle="tab" data-bs-target="#struct-network-kinase" 
+            type="button" role="tab" aria-controls="struct-network-kinase" aria-selected="false">Network Prediction</button>
 </li>
 
 <!-- Kinase Prediction Tab Content -->
@@ -52,7 +52,7 @@
             </div>
         </div>
 
-        <!-- Kinase Recognition Motifs -->
+        <!-- 
         <div class="card mb-4">
             <div class="card-header">
                 <h6 class="mb-0">Kinase Recognition Motifs</h6>
@@ -63,12 +63,12 @@
                     Below are the consensus motifs for the top predicted kinases:
                 </p>
                 <div id="struct-motif-analysis">
-                    <!-- Motif analysis will be filled by JavaScript -->
                 </div>
             </div>
         </div>
+        -->
 
-        <!-- Heatmap Visualization -->
+        <!-- 
         {% if structure_kinase_data.heatmap and structure_kinase_data.heatmap.sites %}
             <div class="card mb-4">
                 <div class="card-header">
@@ -83,6 +83,7 @@
                 </div>
             </div>
         {% endif %}
+        -->
 
         <!-- Hidden kinase data for JavaScript to use -->
         <script id="struct-kinase-data" type="application/json">
