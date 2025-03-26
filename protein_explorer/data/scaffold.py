@@ -91,55 +91,81 @@ def load_from_cache(filename):
 
 def get_uniprot_id_from_gene(gene_symbol: str, organism: str = "human") -> Optional[str]:
     """
-    Convert a gene symbol to a UniProt ID.
+    Convert a gene symbol to a UniProt ID for reviewed Homo sapiens entries.
     
     Args:
         gene_symbol: Gene symbol (e.g., "TP53")
         organism: Organism name (default: "human")
         
     Returns:
-        UniProt ID or None if not found
+        Reviewed UniProt ID (in uppercase) or None if not found.
     """
-    # Cache key
+    # Force gene symbol to uppercase
+    gene_symbol = gene_symbol.upper()
+    
+    # Prepare cache key and filename
     cache_key = f"{gene_symbol}_{organism}"
     cache_filename = f"gene_{cache_key}.json"
     
-    # Check cache
+    # Check cache first
     cache_data = load_from_cache(cache_filename)
     if cache_data:
-        return cache_data.get('uniprot_id')
+        uniprot_id = cache_data.get('uniprot_id')
+        if uniprot_id:
+            return uniprot_id.upper()
     
     # Prepare search query
+    # For human, use organism_id:9606
     if organism.lower() == "human":
         query = f"gene:{gene_symbol} AND organism_id:9606"
     else:
         query = f"gene:{gene_symbol} AND organism:{organism}"
     
-    # Make API request
-    url = f"{UNIPROT_API}/search?query={query}&format=json&size=1"
+    # Build the URL
+    url = f"{UNIPROT_API}/search?query={query}&format=json&size=10"
+    print(url)
+    
     try:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
+        print(data)
         
-        if data.get('results') and len(data['results']) > 0:
-            uniprot_id = data['results'][0]['primaryAccession']
-            
-            # Cache the result
-            save_to_cache(cache_filename, {'uniprot_id': uniprot_id})
-                
-            return uniprot_id
+        # Iterate over results to find a reviewed Homo sapiens entry
+        reviewed_result = None
+        for r in data.get('results', []):
+            organism_data = r.get('organism', {})
+            entry_type = r.get('entryType', '').lower()
+            if (organism_data.get('scientificName', '').lower() == 'homo sapiens' or organism_data.get('organismId') == 9606) \
+               and ('reviewed' in entry_type):
+                reviewed_result = r
+                break
+        
+        if reviewed_result:
+            print(reviewed_result)
+            uniprot_id = reviewed_result.get('primaryAccession')
+            if not uniprot_id:
+                # Fallback: use first secondary accession if available
+                secondary = reviewed_result.get('secondaryAccession')
+                if secondary and len(secondary) > 0:
+                    uniprot_id = secondary[0]
+            if uniprot_id:
+                uniprot_id = uniprot_id.upper()  # Ensure uppercase
+                save_to_cache(cache_filename, {'uniprot_id': uniprot_id})
+                return uniprot_id
+            else:
+                logger.warning(f"No UniProt ID found for gene {gene_symbol}")
+                return None
         else:
-            logger.warning(f"No UniProt ID found for gene {gene_symbol}")
+            logger.warning(f"No reviewed Homo sapiens entry returned for gene {gene_symbol}")
             return None
-            
     except requests.exceptions.RequestException as e:
         logger.error(f"Error converting gene symbol to UniProt ID: {e}")
         return None
 
 def get_protein_by_id(uniprot_id: Optional[str] = None, 
-                     gene_symbol: Optional[str] = None, 
-                     organism: str = "human") -> Dict:
+                      gene_symbol: Optional[str] = None, 
+                      organism: str = "human") -> Dict:
     """
     Retrieve protein data from UniProt by either UniProt ID or gene symbol.
     
@@ -156,9 +182,14 @@ def get_protein_by_id(uniprot_id: Optional[str] = None,
         
     # If only gene symbol is provided, convert to UniProt ID
     if gene_symbol and not uniprot_id:
+        # Force gene symbol to uppercase
+        gene_symbol = gene_symbol.upper()
         uniprot_id = get_uniprot_id_from_gene(gene_symbol, organism)
         if not uniprot_id:
             raise ValueError(f"Could not find UniProt ID for gene {gene_symbol}")
+    else:
+        # If uniprot_id is provided directly, force it to uppercase
+        uniprot_id = uniprot_id.upper()
     
     # Cache filename
     cache_filename = f"uniprot_{uniprot_id}.json"
@@ -192,7 +223,6 @@ def get_protein_by_id(uniprot_id: Optional[str] = None,
 
     # Add gene symbol if it wasn't provided
     if not gene_symbol:
-        # Extract gene name from UniProt metadata
         try:
             gene_names = metadata.get("genes", [])
             if gene_names and len(gene_names) > 0 and "geneName" in gene_names[0]:
@@ -285,7 +315,6 @@ def get_alphafold_structure(uniprot_id: str) -> Optional[str]:
         try:
             with open(cache_file, 'r') as f:
                 structure = f.read()
-                print(f"DEBUG: Read {len(structure)} characters from cache")
                 return structure
         except Exception as e:
             print(f"DEBUG: Error reading from cache: {e}")

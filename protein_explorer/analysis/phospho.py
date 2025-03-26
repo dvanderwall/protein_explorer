@@ -113,7 +113,7 @@ def analyze_phosphosites(sequence: str,
                             parent = atom.get_parent()
                             full_id = parent.get_id()
                             res_id = full_id[1]
-                            print(f"Atom: {atom.get_name()}, Parent: {parent}, Full ID: {full_id}, Res ID: {res_id}")
+                            #print(f"Atom: {atom.get_name()}, Parent: {parent}, Full ID: {full_id}, Res ID: {res_id}")
                             if res_id != resno:
                                 nearby_residues.add(res_id)
                                 

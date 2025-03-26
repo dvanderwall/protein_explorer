@@ -66,9 +66,12 @@
                 {% endif %}
                 
                 <div class="d-flex flex-wrap mb-4">
-                    <a href="/network/{{ protein.get('uniprot_id') }}" class="btn btn-primary me-2 mb-2">
+                    <!--
+                    <a href="https://bioplex.hms.harvard.edu/explorer/externalQuery.php?geneQuery={{ gene_id }}" 
+                    class="btn btn-primary me-2 mb-2" target="_blank">
                         View Interaction Network
                     </a>
+                    -->
                     <a href="https://www.uniprot.org/uniprotkb/{{ protein.get('uniprot_id') }}" 
                     class="btn btn-outline-secondary me-2 mb-2" target="_blank">
                         View on UniProt

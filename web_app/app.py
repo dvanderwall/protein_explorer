@@ -14,10 +14,15 @@ import io
 import re
 import json
 from typing import Dict, List, Optional
-
+import shutil
 # Add the parent directory to the path to import protein_explorer
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import protein_explorer as pe
+
+from protein_explorer.data.scaffold import (
+    get_uniprot_id_from_gene,
+    get_protein_by_id
+)
 
 # Import phosphosite analysis functions
 from protein_explorer.analysis.phospho import analyze_phosphosites
@@ -121,6 +126,13 @@ def ensure_cache_directory():
                 print("Application may have issues with caching")
 
 # Run cache directory initialization
+cache_dir = os.path.expanduser("~/.protein_explorer/cache")
+if os.path.exists(cache_dir):
+    shutil.rmtree(cache_dir)
+    os.makedirs(cache_dir, exist_ok=True)
+    print("Cache cleared.")
+else:
+    print("Cache directory does not exist.")
 ensure_cache_directory()
 
 
@@ -169,7 +181,8 @@ def protein(identifier):
             protein_data = pe.data.get_protein_by_id(uniprot_id=identifier)
         else:
             print(f"DEBUG: Getting protein by gene symbol")
-            protein_data = pe.data.get_protein_by_id(gene_symbol=identifier)
+            pre_filt_id = get_uniprot_id_from_gene(identifier)
+            protein_data = get_protein_by_id(pre_filt_id)
         
         print(f"DEBUG: Protein data retrieved, has_structure: {protein_data.get('has_structure', False)}")
         
@@ -200,7 +213,7 @@ def protein(identifier):
                 if identifier in ['P04637', 'P53_HUMAN']:
                     import requests
                     url = f"https://alphafold.ebi.ac.uk/files/AF-{protein_data['uniprot_id']}-F1-model_v4.pdb"
-                    print(f"DEBUG: Trying direct URL: {url}")
+                    # print(f"DEBUG: Trying direct URL: {url}")
                     response = requests.get(url)
                     if response.status_code == 200:
                         structure = response.text
@@ -236,20 +249,17 @@ def protein(identifier):
                             
                             # Enhance phosphosites with additional metrics for visualization
                             for site in phosphosites:
-                                # Check for any additional supplementary data not already added
                                 if 'resno' in site:
                                     site_id = f"{protein_data['uniprot_id']}_{site['resno']}"
                                     supp_data = get_phosphosite_data(site_id)
                                     
                                     if supp_data:
-                                        # Add any supplementary fields not already present
                                         for key in ['surface_accessibility', 'site_plddt', 
-                                                'polar_aa_percent', 'nonpolar_aa_percent', 
-                                                'acidic_aa_percent', 'basic_aa_percent']:
+                                                    'polar_aa_percent', 'nonpolar_aa_percent', 
+                                                    'acidic_aa_percent', 'basic_aa_percent']:
                                             if key in supp_data and supp_data[key] is not None and key not in site:
                                                 site[key] = supp_data[key]
                             
-                            # Generate enhanced phosphosite HTML with the enhanced_table function
                             from protein_explorer.analysis.enhanced_table import enhance_phosphosite_table
                             phosphosite_html = enhance_phosphosite_table(phosphosites, protein_data['uniprot_id'])
                             
@@ -271,7 +281,6 @@ def protein(identifier):
                                 print(f"DEBUG: Error using enhanced table: {e2}")
                                 # Fall back to original HTML generation if enhanced_table fails
                                 
-                                # Generate phosphosite HTML with basic data (original version)
                                 phosphosite_html = f"""
                                 <div class="card mt-4">
                                     <div class="card-header">
@@ -292,7 +301,6 @@ def protein(identifier):
                                                 <tbody id="phosphosite-table">
                                 """
                                 
-                                # Add rows for each phosphosite with basic data
                                 for site in phosphosites:
                                     phosphosite_html += f"""
                                     <tr>
@@ -304,7 +312,6 @@ def protein(identifier):
                                     </tr>
                                     """
                                 
-                                # Close the table (original version)
                                 phosphosite_html += """
                                                 </tbody>
                                             </table>
@@ -314,17 +321,13 @@ def protein(identifier):
                                 
                                 <script>
                                     document.addEventListener('DOMContentLoaded', function() {
-                                        // Add click handlers to site links
                                         const siteLinks = document.querySelectorAll('.site-link');
                                         siteLinks.forEach(link => {
                                             link.addEventListener('click', function(e) {
                                                 e.preventDefault();
                                                 const resno = this.getAttribute('data-resno');
-                                                
-                                                // Find the span in the sequence viewer
                                                 const sequenceSpans = document.querySelectorAll('.sequence-viewer span');
                                                 if (sequenceSpans.length > 0) {
-                                                    // Find and click the span for this residue
                                                     const index = parseInt(resno) - 1;
                                                     if (index >= 0 && index < sequenceSpans.length) {
                                                         sequenceSpans[index].click();
@@ -353,6 +356,7 @@ def protein(identifier):
         print(f"DEBUG: Exception in protein view: {e}")
         logger.error(f"Error in protein view: {e}")
         return render_template('error.html', error=str(e))
+
 
 
 @app.route('/analyze', methods=['GET', 'POST'])
