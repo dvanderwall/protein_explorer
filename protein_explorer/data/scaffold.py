@@ -381,30 +381,73 @@ def get_alphafold_structure(uniprot_id: str) -> Optional[str]:
 ###################################################################################################################
 #################### STRINGS DATABASE BIOPLEX? ####################################################################
 ###################################################################################################################
-def get_protein_interactions(uniprot_id: str, 
-                           confidence_score: float = 0.7, 
-                           limit: int = 100,
-                           organism_id: int = 9606) -> Dict:
-    """
-    Retrieve protein-protein interactions from the STRING database.
+# def get_protein_interactions(uniprot_id: str, 
+#                            confidence_score: float = 0.7, 
+#                            limit: int = 100,
+#                            organism_id: int = 9606) -> Dict:
+#     """
+#     Retrieve protein-protein interactions from the STRING database.
     
-    Args:
-        uniprot_id: UniProt ID
-        confidence_score: Minimum confidence score (0.0 to 1.0)
-        limit: Maximum number of interactions to retrieve
-        organism_id: NCBI taxonomy ID (default: 9606 for human)
+#     Args:
+#         uniprot_id: UniProt ID
+#         confidence_score: Minimum confidence score (0.0 to 1.0)
+#         limit: Maximum number of interactions to retrieve
+#         organism_id: NCBI taxonomy ID (default: 9606 for human)
         
-    Returns:
-        Dictionary of interacting proteins and confidence scores
+#     Returns:
+#         Dictionary of interacting proteins and confidence scores
+#     """
+#     cache_filename = f"string_{uniprot_id}_{confidence_score}.json"
+    
+#     # Check cache
+#     interactions = load_from_cache(cache_filename)
+#     if isinstance(interactions, dict):
+#         return interactions
+    
+#     # Prepare API request
+#     url = f"{STRING_API}/json/network"
+#     params = {
+#         "identifiers": uniprot_id,
+#         "species": organism_id,
+#         "caller_identity": "protein_explorer",
+#         "required_score": int(confidence_score * 1000),
+#         "limit": limit
+#     }
+    
+#     try:
+#         response = requests.post(url, data=params)
+#         response.raise_for_status()
+#         data = response.json()
+        
+#         # Process results
+#         interactions = {}
+#         for edge in data.get("edges", []):
+#             if edge["from"] == uniprot_id:
+#                 target = edge["to"]
+#             else:
+#                 target = edge["from"]
+                
+#             score = edge["score"] / 1000.0  # Convert to 0.0-1.0 range
+#             interactions[target] = score
+            
+#         # Cache the result
+#         save_to_cache(cache_filename, interactions)
+            
+#         return interactions
+#     except requests.exceptions.RequestException as e:
+#         logger.error(f"Error retrieving protein interactions: {e}")
+#         return {}
+
+def get_protein_interactions(uniprot_id: str, 
+                              confidence_score: float = 0.7, 
+                              limit: int = 100,
+                              organism_id: int = 9606) -> Dict[str, float]:
     """
-    cache_filename = f"string_{uniprot_id}_{confidence_score}.json"
-    
-    # Check cache
-    interactions = load_from_cache(cache_filename)
-    if interactions:
-        return interactions
-    
-    # Prepare API request
+    Retrieve protein-protein interactions from STRING database.
+
+    Returns:
+        Dictionary of interacting protein names and their confidence scores
+    """
     url = f"{STRING_API}/json/network"
     params = {
         "identifiers": uniprot_id,
@@ -413,27 +456,33 @@ def get_protein_interactions(uniprot_id: str,
         "required_score": int(confidence_score * 1000),
         "limit": limit
     }
-    
+
     try:
         response = requests.post(url, data=params)
         response.raise_for_status()
         data = response.json()
-        
-        # Process results
+
+        # Normalize the returned list into a dictionary
         interactions = {}
-        for edge in data.get("edges", []):
-            if edge["from"] == uniprot_id:
-                target = edge["to"]
+        for edge in data:
+            if not isinstance(edge, dict):
+                continue
+
+            # STRING API gives both A and B; identify the *other* interactor
+            a, b = edge.get("preferredName_A"), edge.get("preferredName_B")
+            score = edge.get("score", 0)
+
+            if a == uniprot_id:
+                partner = b
+            elif b == uniprot_id:
+                partner = a
             else:
-                target = edge["from"]
-                
-            score = edge["score"] / 1000.0  # Convert to 0.0-1.0 range
-            interactions[target] = score
-            
-        # Cache the result
-        save_to_cache(cache_filename, interactions)
-            
+                partner = b  # fallback
+
+            if partner:
+                interactions[partner] = score
+
         return interactions
     except requests.exceptions.RequestException as e:
-        logger.error(f"Error retrieving protein interactions: {e}")
+        logger.error(f"Error retrieving protein interactions for {uniprot_id}: {e}")
         return {}

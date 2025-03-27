@@ -1,16 +1,8 @@
 """
 Flask web application for the Protein Explorer.
 """
-########################################
-### Adding SQL automation code
-### Automatically establish a Cloud SQL connection and run the Flask app.
-### This version loads credentials from a .env file and starts the app with SQLAlchemy ready.
-########################################
 
-from flask import Flask, render_template, request, redirect, url_for
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 import os
 import sys
 import logging
@@ -23,66 +15,6 @@ import re
 import json
 from typing import Dict, List, Optional
 import shutil
-
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Load DB credentials from env
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASS = os.getenv("DB_PASS", "proteinexplorer")
-DB_NAME = os.getenv("DB_NAME", "proteinexplorer_db")
-DB_PORT = os.getenv("DB_PORT", "5433")
-DB_HOST = os.getenv("DB_HOST", "127.0.0.1")  # Proxy should already be running
-
-# Optional: Automatically start the Cloud SQL Proxy if it's not running
-def start_proxy():
-    import subprocess
-    import socket
-    try:
-        with socket.create_connection((DB_HOST, int(DB_PORT)), timeout=1):
-            print("✅ Cloud SQL Proxy is already running.")
-    except Exception:
-        print("🔄 Starting Cloud SQL Proxy...")
-        subprocess.Popen(["./proxy_start.sh"])  # Assumes script is in root dir
-
-# SQLAlchemy engine setup
-start_proxy()  # Try starting proxy if not running
-DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Flask app
-app = Flask(__name__)
-
-# Example route to confirm DB connection
-@app.route("/test-db")
-def test_db():
-    try:
-        with engine.connect() as connection:
-            result = connection.execute("SELECT NOW()").fetchone()
-        return f"✅ Connected to DB! Server time: {result[0]}"
-    except Exception as e:
-        logger.error(f"❌ DB connection failed: {e}")
-        return f"❌ Failed to connect to DB: {str(e)}"
-
-# Home route
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-# # Run the app
-# if __name__ == '__main__':
-#     app.run(debug=True)
-
-########################################
-##### Original app.py code starts below
-########################################
-
 # Add the parent directory to the path to import protein_explorer
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import protein_explorer as pe
@@ -138,6 +70,7 @@ from protein_explorer.analysis.network_kinase_predictor import (
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 # Preload structural similarity data at application startup
 try:
     print("Preloading structural similarity data...")
@@ -281,7 +214,6 @@ def protein(identifier):
                 if identifier in ['P04637', 'P53_HUMAN']:
                     import requests
                     url = f"https://alphafold.ebi.ac.uk/files/AF-{protein_data['uniprot_id']}-F1-model_v4.pdb"
-                    # print(f"DEBUG: Trying direct URL: {url}")
                     response = requests.get(url)
                     if response.status_code == 200:
                         structure = response.text
@@ -356,7 +288,7 @@ def protein(identifier):
                                     </div>
                                     <div class="card-body p-0">
                                         <div class="table-responsive">
-                                            <table class="table table-striped table-hover">
+                                            <table class="table table-striped table-hover phosphosite-table">
                                                 <thead class="thead-light">
                                                     <tr>
                                                         <th>Site</th>
@@ -370,8 +302,18 @@ def protein(identifier):
                                 """
                                 
                                 for site in phosphosites:
+                                    # Add data attributes to the row for better visualization
+                                    data_attrs = f'''
+                                        data-site="{site['site']}" 
+                                        data-resno="{site['resno']}" 
+                                        data-type="{site['site'][0] if 'site' in site else ''}"
+                                        data-plddt="{site.get('mean_plddt', 0)}" 
+                                        data-nearby="{site.get('nearby_count', 0)}"
+                                        data-known="{str(site.get('is_known', False)).lower()}"
+                                    '''
+                                    
                                     phosphosite_html += f"""
-                                    <tr>
+                                    <tr {data_attrs}>
                                         <td><a href="/site/{protein_data['uniprot_id']}/{site['site']}" class="site-link" data-resno="{site['resno']}">{site['site']}</a></td>
                                         <td><code class="motif-sequence">{site['motif']}</code></td>
                                         <td>{site['mean_plddt']}</td>
@@ -411,20 +353,46 @@ def protein(identifier):
                 structure_html = f'<div class="alert alert-danger">Error loading structure: {str(e)}</div>'
         
         print(f"DEBUG: Rendering template with phosphosite_html: {'Present' if phosphosite_html else 'None'}")
-        print(f"DEBUG: phosphosite_html content length: {len(phosphosite_html) if phosphosite_html else 'None'}")
+        
+        # Make sure we include necessary scripts for visualization
+        extra_scripts = """
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+        <script>
+        // Check if Chart.js loaded successfully
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, Chart.js status:', typeof Chart !== 'undefined' ? 'Loaded' : 'Not loaded');
+            
+            // If not loaded, try to load it again
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js not loaded, attempting to load it again');
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js';
+                script.onload = function() {
+                    console.log('Chart.js loaded successfully on retry');
+                    // Load visualization script
+                    const vizScript = document.createElement('script');
+                    vizScript.src = "{{ url_for('static', filename='js/phosphosite-visualization.js') }}";
+                    document.head.appendChild(vizScript);
+                };
+                document.head.appendChild(script);
+            }
+        });
+        </script>
+        """
         
         return render_template(
             'protein.html',
             protein=protein_data,
             structure_html=structure_html,
             phosphosites=phosphosites,  # Pass the phosphosites data
-            phosphosite_html=phosphosite_html  # Pass the HTML for rendering
+            phosphosite_html=phosphosite_html,  # Pass the HTML for rendering
+            extra_scripts=extra_scripts  # Add extra scripts for visualization
         )
     except Exception as e:
         print(f"DEBUG: Exception in protein view: {e}")
         logger.error(f"Error in protein view: {e}")
         return render_template('error.html', error=str(e))
-
 
 
 @app.route('/analyze', methods=['GET', 'POST'])
@@ -472,7 +440,7 @@ def analyze():
                 common_interactors = pe.navigation.find_common_interactors(network, protein_list)
                 
                 return render_template(
-                    'analyze_results.html',
+                    'analyze.html',
                     analysis_type=analysis_type,
                     proteins=protein_list,
                     network_html=network_html,
@@ -506,7 +474,7 @@ def analyze():
                     structure_html = pe.visualization.compare_structures(list(structures.values()))
                 
                 return render_template(
-                    'analyze_results.html',
+                    'analyze.html',
                     analysis_type=analysis_type,
                     proteins=protein_list,
                     structure_html=structure_html,
