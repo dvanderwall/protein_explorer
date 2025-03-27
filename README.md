@@ -165,9 +165,25 @@ The application uses a series of HTML templates located in `web_app/templates/`:
 - **Sequence Similarity Database**: Precomputed sequence similarity scores
 - **Kinase Prediction Scores**: Precomputed structure and sequence-based kinase scores
 
+### MySQL Integration (Remote SQL Database)
+
+Protein Explorer uses a remote MySQL database hosted on Google Cloud SQL to manage and query structured data in real time. This database replaces earlier local file-based storage (e.g., .feather, .parquet) for certain datasets, enabling:
+- Faster querying and analysis from the web app
+- Centralized storage across different deployments
+- Scalable infrastructure for large datasets
+
+#### How it works
+All SQL interactions are managed via a secure SQLAlchemy-based connector (cloud_sql_connector.py). The app uses in-memory caching (via Python dictionaries) to store recent query results during a session. There is no reliance on local disk caching anymore—only remote SQL and memory. If access to the remote database fails to be established, the application falls back to the local disk caching system.
+
 ### Data Loading and Caching
 
 The application implements efficient data loading and caching strategies:
+
+1. **Remote SQL Queries**: Primary source of all structured data
+2. **In-Memory Caching**: Frequently accessed query results are cached in memory
+3. **Progressive Loading**: Large datasets are loaded incrementally and on-demand
+
+If the remote database access fails, the application falls back to the local caching systems: 
 
 1. **Preloading**: Critical data is preloaded at application startup
 2. **Local Caching**: Downloaded structures and data are cached locally
