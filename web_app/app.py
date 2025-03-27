@@ -1,8 +1,16 @@
 """
 Flask web application for the Protein Explorer.
 """
+########################################
+### Adding SQL automation code
+### Automatically establish a Cloud SQL connection and run the Flask app.
+### This version loads credentials from a .env file and starts the app with SQLAlchemy ready.
+########################################
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 import os
 import sys
 import logging
@@ -15,6 +23,66 @@ import re
 import json
 from typing import Dict, List, Optional
 import shutil
+
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Load DB credentials from env
+DB_USER = os.getenv("DB_USER", "postgres")
+DB_PASS = os.getenv("DB_PASS", "proteinexplorer")
+DB_NAME = os.getenv("DB_NAME", "proteinexplorer_db")
+DB_PORT = os.getenv("DB_PORT", "5433")
+DB_HOST = os.getenv("DB_HOST", "127.0.0.1")  # Proxy should already be running
+
+# Optional: Automatically start the Cloud SQL Proxy if it's not running
+def start_proxy():
+    import subprocess
+    import socket
+    try:
+        with socket.create_connection((DB_HOST, int(DB_PORT)), timeout=1):
+            print("✅ Cloud SQL Proxy is already running.")
+    except Exception:
+        print("🔄 Starting Cloud SQL Proxy...")
+        subprocess.Popen(["./proxy_start.sh"])  # Assumes script is in root dir
+
+# SQLAlchemy engine setup
+start_proxy()  # Try starting proxy if not running
+DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Flask app
+app = Flask(__name__)
+
+# Example route to confirm DB connection
+@app.route("/test-db")
+def test_db():
+    try:
+        with engine.connect() as connection:
+            result = connection.execute("SELECT NOW()").fetchone()
+        return f"✅ Connected to DB! Server time: {result[0]}"
+    except Exception as e:
+        logger.error(f"❌ DB connection failed: {e}")
+        return f"❌ Failed to connect to DB: {str(e)}"
+
+# Home route
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+# # Run the app
+# if __name__ == '__main__':
+#     app.run(debug=True)
+
+########################################
+##### Original app.py code starts below
+########################################
+
 # Add the parent directory to the path to import protein_explorer
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import protein_explorer as pe
